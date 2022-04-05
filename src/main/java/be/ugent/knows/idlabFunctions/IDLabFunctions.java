@@ -42,8 +42,8 @@ public class IDLabFunctions {
     private static Path STATE_DIR = null;
 
     // used by the lookup function
-    private static Map<String, String> LOOKUP_STATE_MAP = new HashMap<String, String>();
-    private static String LOOKUP_STATE_INPUTFILE = null;
+    private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
+    private static String LOOKUP_STATE_INPUTFILE = "";
     private static Integer LOOKUP_STATE_FROM_COLUMN = -1;
     private static Integer LOOKUP_STATE_TO_COLUMN = -1;
 
@@ -363,7 +363,7 @@ public class IDLabFunctions {
                             try {
                                 storeVal = propVal[1];
                             } catch (IndexOutOfBoundsException e) {
-
+                                // too bad
                             }
 
                             String watchedVal = watchedMap.getOrDefault(property, null);
@@ -622,11 +622,10 @@ public class IDLabFunctions {
      * index is out of range or if the searchString is not found, a message is logged and null is returned
      */
 
-    public static String lookupWithDelimiter(String searchString, String inputFile, Integer fromColumn, Integer toColumn, String delimiter) throws CsvValidationException, IOException, CsvValidationException {
+    public static String lookupWithDelimiter(String searchString, String inputFile, Integer fromColumn, Integer toColumn, String delimiter) throws IOException, CsvValidationException {
 
-        String result = null;
         //check if the LOOKUP_STATE_MAP contains the right values
-        if (LOOKUP_STATE_INPUTFILE != inputFile || LOOKUP_STATE_FROM_COLUMN != fromColumn || LOOKUP_STATE_TO_COLUMN != toColumn) {
+        if (!LOOKUP_STATE_INPUTFILE.equals(inputFile) || !LOOKUP_STATE_FROM_COLUMN.equals(fromColumn) || !LOOKUP_STATE_TO_COLUMN.equals(toColumn)) {
             LOOKUP_STATE_INPUTFILE = inputFile;
             LOOKUP_STATE_FROM_COLUMN = fromColumn;
             LOOKUP_STATE_TO_COLUMN = toColumn;
@@ -645,7 +644,7 @@ public class IDLabFunctions {
             String[] nextLine = reader.readNext();
             if (fromColumn < 0 || toColumn < 0 || fromColumn >= nextLine.length || toColumn >= nextLine.length) {
                 logger.error("Column index out of boundries; inputFile: \"{}\", fromColumn: \"{}\", toColumn: \"{}\"", inputFile, fromColumn, toColumn);
-                return result;
+                return null;
             }
             while (nextLine != null) {
                 // only save first occurrence in hashmap
@@ -653,11 +652,10 @@ public class IDLabFunctions {
                     LOOKUP_STATE_MAP.put(nextLine[fromColumn], nextLine[toColumn]);
                 }
                 nextLine = reader.readNext();
-                ;
             }
             reader.close();
         }
-        result = LOOKUP_STATE_MAP.get(searchString);
+        String result = LOOKUP_STATE_MAP.get(searchString);
 
         if (result == null) {
             logger.error("The searchString is not found; searchString: \"{}\", inputFile: \"{}\", fromColumn: \"{}\"", searchString, inputFile, fromColumn);
@@ -665,7 +663,7 @@ public class IDLabFunctions {
         return result;
     }
 
-    public static String lookup(String searchString, String inputFile, Integer fromColumn, Integer toColumn) throws CsvValidationException, IOException, CsvValidationException {
+    public static String lookup(String searchString, String inputFile, Integer fromColumn, Integer toColumn) throws IOException, CsvValidationException {
         return lookupWithDelimiter(searchString, inputFile, fromColumn, toColumn, ",");
     }
 }
