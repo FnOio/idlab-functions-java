@@ -79,8 +79,6 @@ public class Utils {
 
     static File getResourceAsFile(String resource) throws IOException {
         ClassLoader cl = Utils.class.getClassLoader();
-        //URL resourceUrl = URLClassLoader.getSystemResource(resource);
-        //URLClassLoader classLoader = new URLClassLoader(new URL[]{new URL(resource)}, cl);
         URL resourceUrl = cl.getResource(resource);
         if (resourceUrl == null) {
             throw new IOException("Resource file " + resource + " doesn't exist");
