@@ -8,7 +8,8 @@
 ###########
 
 idlab-fn-m:idLabFunctions a fnoi:JavaClass ;
-  fnoi:class-name "be.ugent.knows.idlabFunctions.IDLabFunctions" .
+  # for testing:
+  fnoi:class-name "be.ugent.knows.idlabFunctions.IDLabTestFunctions" .
 
 idlab-fn-m:utilFunctions a fnoi:JavaClass ;
   #doap:download-page "IDLabFunctions.jar" ;
