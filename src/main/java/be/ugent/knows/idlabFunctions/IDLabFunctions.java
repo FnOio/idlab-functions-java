@@ -15,8 +15,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import com.opencsv.exceptions.CsvValidationException;
-import org.apache.commons.collections.ListUtils;
-import org.apache.commons.collections.PredicateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

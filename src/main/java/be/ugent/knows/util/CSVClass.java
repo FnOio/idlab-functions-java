@@ -1,7 +1,8 @@
 package be.ugent.knows.util;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 public class CSVClass {
 
