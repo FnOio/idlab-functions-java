@@ -15,6 +15,8 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import com.opencsv.exceptions.CsvValidationException;
+import org.apache.commons.collections.ListUtils;
+import org.apache.commons.collections.PredicateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -666,13 +668,13 @@ public class IDLabFunctions {
      *
      * @param searchValues The values to match row on.
      * @param inputFile The path of a csv file in which the searchValues needs to be found.
-     * @param delimiter The delimiter used in the csv file
+     * @param delimiter The delimiter used in the csv file.
      * @return List of String type that contains found row values from the given csv file. If there is no match null is returned.
      * @throws IOException
      * @throws CsvValidationException
      */
 
-    public static List<String> multipleLookup(ArrayList<String> searchValues, String inputFile, String delimiter) throws IOException, CsvValidationException {
+    public static List<String> multipleLookup(List<String> searchValues, String inputFile, String delimiter) throws IOException, CsvValidationException {
 
         CSVClass csv;
         if(MULTILOOKUP_STATE_MAP.containsKey(inputFile)){
@@ -697,8 +699,27 @@ public class IDLabFunctions {
         // finds first occurrence in the csv file
         return csv.find(searchValues);
     }
+
+    /**
+     * It is a function that looks for the first occurrence of a certain 6 values in a columns of a csv file,
+     * in order to return a value from a different columns in the same row.
+     * If the value is unknown or doesn't exist, null value should be passed.
+     *
+     * @param first The search String value.
+     * @param second The search String value.
+     * @param third The search String value.
+     * @param fourth The search String value.
+     * @param fifth The search String value.
+     * @param sixth The search String value.
+     * @param inputFile The path of a csv file in which the searchValues needs to be found.
+     * @param delimiter The delimiter used in the csv file.
+     * @return List of String type that contains found row values from the given csv file. If there is no match null is returned.
+     * @throws IOException
+     * @throws CsvValidationException
+     */
     public static List<String> multipleLookup(String first, String second, String third, String fourth, String fifth, String sixth, String inputFile, String delimiter) throws IOException, CsvValidationException {
-        return multipleLookup(new ArrayList<>(Arrays.asList(first, second, third, fourth,fifth, sixth)), inputFile, delimiter);
+        List<String> values = add(new ArrayList<>(Arrays.asList(first, second, third, fourth, fifth, sixth)));
+        return multipleLookup(values, inputFile, delimiter);
     }
 
 
@@ -716,5 +737,14 @@ public class IDLabFunctions {
                     .build();
         }
         return null;
+    }
+
+    private static List<String> add(List<String> list){
+        List<String> l = new ArrayList<>();
+        for (String s: list) {
+            if(s != null)
+                l.add(s);
+        }
+        return l;
     }
 }

@@ -300,7 +300,6 @@ public class IDLabFunctionsTest {
         String classType = "B";
         String inputFile =  "src/test/resources/student.csv";
 
-
         assertEquals(new ArrayList<>(Arrays.asList("3",classType)),
                 IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)), inputFile, ","));
 
@@ -322,6 +321,10 @@ public class IDLabFunctionsTest {
 
         assertNull(IDLabFunctions.multipleLookup(null, inputFile, ","));
         assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(), inputFile, ","));
+
+        name = "Peter";
+        assertEquals(new ArrayList<>(Arrays.asList("3", classType)),
+                IDLabFunctions.multipleLookup(null, name, comment, null, null, null, inputFile, ","));
 
     }
 }
