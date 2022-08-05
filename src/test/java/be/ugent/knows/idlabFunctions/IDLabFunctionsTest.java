@@ -8,10 +8,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -283,11 +280,11 @@ public class IDLabFunctionsTest {
         assertEquals("Class A", IDLabFunctions.lookupWithDelimiter(searchString, inputFile, fromColumn, toColumn, delimiter));
 
         searchString = "Class B";
-        assertEquals(null, IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
+        assertNull(IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
 
         searchString = "Class B";
         fromColumn = 2;
-        assertEquals(null, IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
+        assertNull(IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
 
         searchString = "B";
         fromColumn = 0;
@@ -296,4 +293,35 @@ public class IDLabFunctionsTest {
         assertEquals("Class B", IDLabFunctions.lookupWithDelimiter(searchString, inputFile, fromColumn, toColumn, delimiter));
     }
 
+    @Test
+    public void multiLookup() throws CsvValidationException, IOException {
+        String name = "Peter";
+        String comment = "A&B";
+        String classType = "B";
+        String inputFile =  "src/test/resources/student.csv";
+
+
+        assertEquals(new ArrayList<>(Arrays.asList("3",classType)),
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)), inputFile, ","));
+
+        name = "Alexander";
+        assertEquals(new ArrayList<>(Arrays.asList("2", name)),
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(comment, classType)), inputFile, ","));
+
+        name = "Stella";
+        classType = "A";
+        assertEquals(new ArrayList<>(Arrays.asList("7", comment, classType)),
+                IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), inputFile, ","));
+
+        name = "Venus";
+        assertEquals(new ArrayList<>(Arrays.asList("1", name, classType)),
+                IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(comment)), inputFile, ","));
+
+        classType = "B";
+        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, classType)), inputFile, ","));
+
+        assertNull(IDLabFunctions.multipleLookup(null, inputFile, ","));
+        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(), inputFile, ","));
+
+    }
 }
