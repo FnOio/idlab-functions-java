@@ -1,6 +1,5 @@
 package be.ugent.knows.idlabFunctions;
 
-import be.ugent.knows.util.CSVClass;
 import be.ugent.knows.util.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +16,6 @@ import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import com.opencsv.exceptions.CsvValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -44,13 +42,13 @@ public class IDLabFunctions {
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
-    private static final Map<String, CSVClass> MULTILOOKUP_STATE_MAP = new HashMap<>();
+    private static final Map<List<String>, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
     private static String LOOKUP_STATE_INPUTFILE = "";
     private static Integer LOOKUP_STATE_FROM_COLUMN = -1;
     private static Integer LOOKUP_STATE_TO_COLUMN = -1;
 
-    public static Map<String, CSVClass> filesMapResults(){
-        return MULTILOOKUP_STATE_MAP;
+    public static Map<List<String>, String> getMultipleLookupStateMap(){
+        return MULTIPLE_LOOKUP_STATE_MAP;
     }
     public static boolean stringContainsOtherString(String str, String otherStr, String delimiter) {
         String[] split = str.split(delimiter);
@@ -643,7 +641,6 @@ public class IDLabFunctions {
                }
                while (nextLine != null) {
                    // only save first occurrence in hashmap
-                   System.out.println(nextLine[fromColumn] + " - " + nextLine[toColumn]);
                    if (!LOOKUP_STATE_MAP.containsKey(nextLine[fromColumn])) {
                        LOOKUP_STATE_MAP.put(nextLine[fromColumn], nextLine[toColumn]);
                    }
@@ -652,7 +649,7 @@ public class IDLabFunctions {
                reader.close();
            }
 
-        String result = LOOKUP_STATE_MAP.get(searchString);
+           String result = LOOKUP_STATE_MAP.get(searchString);
 
         if (result == null) {
             logger.error("The searchString is not found; searchString: \"{}\", inputFile: \"{}\", fromColumn: \"{}\"", searchString, inputFile, fromColumn);
@@ -661,67 +658,84 @@ public class IDLabFunctions {
     }
 
     /**
-     * It is a function that looks for the first occurrence of a certain values in a columns of a csv file,
-     * in order to return a value from a different columns in the same row.
+     * It is a function that looks for the first occurrence of certain values in the columns of a csv file,
+     * in order to return a value from the needed column in the same row.
      *
      * @param searchValues The values to match row on.
+     * @param fromColumns The columns that connect values to the columns of csv file.
      * @param inputFile The path of a csv file in which the searchValues needs to be found.
+     * @param toColumn The index of column the value of witch should be found.
      * @param delimiter The delimiter used in the csv file.
      * @return List of String type that contains found row values from the given csv file. If there is no match null is returned.
      * @throws IOException
      * @throws CsvValidationException
      */
 
-    public static List<String> multipleLookup(List<String> searchValues, String inputFile, String delimiter) throws IOException, CsvValidationException {
+    public static String multipleLookup(List<String> searchValues, List<Integer> fromColumns, String inputFile, Integer toColumn, String delimiter) throws IOException, CsvValidationException {
+        List<String> result = null;
+        CSVReader reader = makeReader(inputFile, delimiter);
 
-        CSVClass csv;
-        if(MULTILOOKUP_STATE_MAP.containsKey(inputFile)){
-            csv = MULTILOOKUP_STATE_MAP.get(inputFile);
-        }else {
-            csv = new CSVClass();
-            csv.setName(inputFile);
+        if(reader != null) {
+            String[] nextLine = reader.readNext();
 
-            CSVReader reader = makeReader(inputFile, delimiter);
-            if(reader != null) {
-                String[] nextLine = reader.readNext();
-
-                while (nextLine != null) {
-                    csv.addValue(Arrays.asList(nextLine));
-                    nextLine = reader.readNext();
-                }
-                reader.close();
+            if (searchValues == null || fromColumns == null
+                    || toColumn == null || searchValues.isEmpty() || toColumn < 0
+                    || toColumn >= nextLine.length || searchValues.size() != fromColumns.size()) {
+                logger.error("Column index out of boundries; inputFile: \"{}\", fromColumns: \"{}\", toColumn: \"{}\"", inputFile, fromColumns, toColumn);
+                return null;
             }
-            MULTILOOKUP_STATE_MAP.put(inputFile, csv);
+            for (Integer index: fromColumns) {
+                if(index < 0 || index > nextLine.length){
+                    logger.error("Column index out of boundries; inputFile: \"{}\", fromColumns: \"{}\", toColumn: \"{}\"", inputFile, fromColumns, toColumn);
+                    return null;
+                }
+            }
+
+            while (nextLine != null && result == null) {
+                // only save first occurrence in hashmap
+                result = check(fromColumns, searchValues, nextLine);
+                nextLine = reader.readNext();
+
+            }
+            reader.close();
         }
 
-        // finds first occurrence in the csv file
-        return csv.find(searchValues);
+        if(result != null) {
+            MULTIPLE_LOOKUP_STATE_MAP.put(searchValues, result.get(toColumn));
+        }
+
+
+        if (result == null) {
+            logger.error("The searchString is not found; searchString: \"{}\", inputFile: \"{}\", fromColumns: \"{}\"", searchValues, inputFile, fromColumns);
+            return null;
+        }
+        return result.get(toColumn);
     }
 
-    /**
-     * It is a function that looks for the first occurrence of a certain 6 values in a columns of a csv file,
-     * in order to return a value from a different columns in the same row.
-     * If the value is unknown or doesn't exist, null value should be passed.
-     *
-     * @param first The search String value.
-     * @param second The search String value.
-     * @param third The search String value.
-     * @param fourth The search String value.
-     * @param fifth The search String value.
-     * @param sixth The search String value.
-     * @param inputFile The path of a csv file in which the searchValues needs to be found.
-     * @param delimiter The delimiter used in the csv file.
-     * @return List of String type that contains found row values from the given csv file. If there is no match null is returned.
-     * @throws IOException
-     * @throws CsvValidationException
-     */
-    public static List<String> multipleLookup(String first, String second, String third, String fourth, String fifth, String sixth, String inputFile, String delimiter) throws IOException, CsvValidationException {
-        List<String> values = add(new ArrayList<>(Arrays.asList(first, second, third, fourth, fifth, sixth)));
-        return multipleLookup(values, inputFile, delimiter);
+    private static List<String> check(List<Integer> fromColumns, List<String> searchValues, String[] nextLine){
+        for (int i = 0; i < fromColumns.size(); i++) {
+            if(!nextLine[fromColumns.get(i)].equals(searchValues.get(i))){
+                return null;
+            }
+        }
+        return Arrays.asList(nextLine);
     }
 
 
-        private static CSVReader makeReader(String inputFile, String delimiter) throws IOException {
+    public static String multipleLookup(String firstStr, String secondStr, String thirdStr, String fourthStr, String fifthStr, String sixthStr,
+                                              Integer first, Integer second, Integer third, Integer fourth, Integer fifth, Integer sixth,
+                                              String inputFile, Integer toColumn, String delimiter) throws IOException, CsvValidationException {
+        List<String> values = new ArrayList<>(Arrays.asList(firstStr, secondStr, thirdStr, fourthStr, fifthStr, sixthStr))
+                .stream().filter(Objects::nonNull)
+                .collect(Collectors.toList());;
+        List<Integer> indexes = new ArrayList<>(Arrays.asList(first, second, third, fourth, fifth, sixth))
+                .stream().filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return multipleLookup(values,indexes, inputFile,toColumn, delimiter);
+    }
+
+
+    private static CSVReader makeReader(String inputFile, String delimiter) throws IOException {
 
         if(inputFile != null){
             InputStream inputStream = Files.newInputStream(new File(inputFile).toPath());
@@ -737,12 +751,4 @@ public class IDLabFunctions {
         return null;
     }
 
-    private static List<String> add(List<String> list){
-        List<String> l = new ArrayList<>();
-        for (String s: list) {
-            if(s != null)
-                l.add(s);
-        }
-        return l;
-    }
 }
