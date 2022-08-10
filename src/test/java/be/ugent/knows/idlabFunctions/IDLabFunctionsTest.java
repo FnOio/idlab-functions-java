@@ -332,6 +332,24 @@ public class IDLabFunctionsTest {
 
     }
 
+    @Test
+    public void twoFilesWithSameSearchParameters() throws CsvValidationException, IOException {
+        name = "Alexander";
+        classType = "B";
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+
+        inputFile =  "src/test/resources/studentsCopy.csv";
+
+        assertEquals("2a",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+    }
+
 
 
     @Test
@@ -365,10 +383,11 @@ public class IDLabFunctionsTest {
         classType = "A";
         inputFile =  "src/test/resources/studentsCopy.csv";
 
-        assertEquals("1",
+        assertEquals("1a",
                 IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, classType)),
                         new ArrayList<>(Arrays.asList(1, 3)),
                         inputFile, 0, ","));
+
     }
 
 }
