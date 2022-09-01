@@ -20,7 +20,6 @@ import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import com.opencsv.exceptions.CsvValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -43,6 +42,9 @@ public class IDLabFunctions {
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<String, List<String[]>> CACHE = new HashMap<>();
+    private static String LOOKUP_STATE_INPUTFILE = "";
+    private static Integer LOOKUP_STATE_FROM_COLUMN = -1;
+    private static Integer LOOKUP_STATE_TO_COLUMN = -1;
 
     public static Map<SearchParameters, String> getMultipleLookupStateSet(){
         return Cache.getMultipleLookupStateMap();
