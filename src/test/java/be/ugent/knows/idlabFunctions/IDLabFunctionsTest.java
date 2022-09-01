@@ -8,10 +8,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -170,36 +168,36 @@ public class IDLabFunctionsTest {
         assertEquals("ben-de-meester", result);
     }
 
-	@Test
-	public void normalizeDateWithLang() {
-		String input1 = "20220121";
-		String format1 = "yyyyMMdd";
-		assertEquals("2022-01-21", IDLabFunctions.normalizeDateWithLang(input1, format1, "en"));
+    @Test
+    public void normalizeDateWithLang() {
+        String input1 = "20220121";
+        String format1 = "yyyyMMdd";
+        assertEquals("2022-01-21", IDLabFunctions.normalizeDateWithLang(input1, format1, "en"));
 
-		String input2 = "01 April 22";
-		// String format2 = "dd LLLL uu";	// This does not work on Java 8!
-		String format2 = "dd MMMM uu";
-		assertEquals("2022-04-01", IDLabFunctions.normalizeDateWithLang(input2, format2, "en"));
+        String input2 = "01 April 22";
+        // String format2 = "dd LLLL uu";	// This does not work on Java 8!
+        String format2 = "dd MMMM uu";
+        assertEquals("2022-04-01", IDLabFunctions.normalizeDateWithLang(input2, format2, "en"));
 
-		assertNull(IDLabFunctions.normalizeDateWithLang("rubbish", "yodelahiti", "en"));
+        assertNull(IDLabFunctions.normalizeDateWithLang("rubbish", "yodelahiti", "en"));
 
-		// will fail because "April" is no French
-		assertNull(IDLabFunctions.normalizeDateWithLang(input2, format2, "fr"));
+        // will fail because "April" is no French
+        assertNull(IDLabFunctions.normalizeDateWithLang(input2, format2, "fr"));
 
         String input3 = "01-avr.-22";   // yes, French abbreviations need a '.' !
         String format3 = "dd-MMM-yy";
         assertEquals("2022-04-01", IDLabFunctions.normalizeDateWithLang(input3, format3, "fr"));
-	}
+    }
 
-	@Test
-	public void normalizeDate() {
-		String input1 = "20220121";
-		String format1 = "yyyyMMdd";
-		assertEquals("2022-01-21", IDLabFunctions.normalizeDate(input1, format1));
+    @Test
+    public void normalizeDate() {
+        String input1 = "20220121";
+        String format1 = "yyyyMMdd";
+        assertEquals("2022-01-21", IDLabFunctions.normalizeDate(input1, format1));
 
-		assertNull(IDLabFunctions.normalizeDate("rubbish", "yodelahiti"));
+        assertNull(IDLabFunctions.normalizeDate("rubbish", "yodelahiti"));
 
-	}
+    }
 
     @Test
     public void normalizeDateTimeWithLang() {
@@ -224,7 +222,8 @@ public class IDLabFunctionsTest {
         assertEquals("2020-04-01T09:04:00", IDLabFunctions.normalizeDateTime(input3, format3));
 
     }
-    public static class LDESGenerationTests{
+
+    public static class LDESGenerationTests {
 
         private static final String STATE_DIRECTORY = "/tmp/test-state";
 
@@ -236,7 +235,7 @@ public class IDLabFunctionsTest {
         }
 
         @Test
-        public void skipGenerateUniqueIRI(){
+        public void skipGenerateUniqueIRI() {
             String template = "http://example.com/sensor1/";
             String value = "pressure=5";
             boolean isUnique = false;
@@ -248,7 +247,7 @@ public class IDLabFunctionsTest {
 
 
         @Test
-        public void generateUniqueIRI(){
+        public void generateUniqueIRI() {
             String template = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = true;
@@ -259,7 +258,7 @@ public class IDLabFunctionsTest {
         }
 
         @Test
-        public void generateUniqueIRIWithDate(){
+        public void generateUniqueIRIWithDate() {
 
             String template = "http://example.com/sensor2/";
             String value = "pressure=5";
@@ -274,7 +273,7 @@ public class IDLabFunctionsTest {
     @Test
     public void lookup() throws CsvValidationException, IOException {
         String searchString = "A";
-        String inputFile =  "src/test/resources/class.csv";
+        String inputFile = "src/test/resources/class.csv";
         Integer fromColumn = 0;
         Integer toColumn = 1;
         assertEquals("Class A", IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
@@ -283,17 +282,133 @@ public class IDLabFunctionsTest {
         assertEquals("Class A", IDLabFunctions.lookupWithDelimiter(searchString, inputFile, fromColumn, toColumn, delimiter));
 
         searchString = "Class B";
-        assertEquals(null, IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
+        assertNull(IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
 
         searchString = "Class B";
         fromColumn = 2;
-        assertEquals(null, IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
+        assertNull(IDLabFunctions.lookup(searchString, inputFile, fromColumn, toColumn));
 
         searchString = "B";
         fromColumn = 0;
         inputFile = "src/test/resources/classB.csv";
         delimiter = ";";
         assertEquals("Class B", IDLabFunctions.lookupWithDelimiter(searchString, inputFile, fromColumn, toColumn, delimiter));
+    }
+
+    private String name = "Alexander";
+    private final String comment = "A&B";
+    private String classType = "B";
+    private String inputFile = "src/test/resources/students.csv";
+
+
+
+    @Test
+    public void simpleMultipleLookup() throws CsvValidationException, IOException {
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+
+        assertEquals(name,
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(comment, classType)),
+                        new ArrayList<>(Arrays.asList(2, 3)),
+                        inputFile, 1, ","));
+
+        name = "Stella";
+        classType = "A";
+        assertEquals(name,
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList("7", comment, classType)),
+                        new ArrayList<>(Arrays.asList(0,2,3)),
+                        inputFile,1, ","));
+
+        name = "Stella";
+        assertEquals("7",
+                IDLabFunctions.multipleLookup(null, name, comment, null, null, null,null, 1, 2,
+                        null, null, null, inputFile,0, ","));
+
+        anotherFileToHashmap();
+
+        assertEquals(71,IDLabFunctions.getMultipleLookupStateSet().size());
+
+    }
+
+    @Test
+    public void simpleMultipleLookupSizeOfMapCheck() throws CsvValidationException, IOException {
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+        assertEquals(23,IDLabFunctions.getMultipleLookupStateSet().size());
+
+    }
+
+    @Test
+    public void simpleMultipleLookupSizeOfCacheCheck() throws CsvValidationException, IOException {
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+        assertEquals(IDLabFunctions.getCache().size(),IDLabFunctions.getMultipleLookupStateSet().size());
+
+    }
+        @Test
+    public void twoFilesWithSameSearchParameters() throws CsvValidationException, IOException {
+        name = "Alexander";
+        classType = "B";
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+
+        inputFile =  "src/test/resources/studentsCopy.csv";
+
+        assertEquals("2a",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+    }
+
+
+    @Test
+    public void columnIsOverLimit() throws CsvValidationException, IOException {
+        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)),
+                new ArrayList<>(Collections.singletonList(2)),
+                inputFile, 6, ","));
+    }
+
+    @Test
+    public void incorrectSizesOfIndexesAndValues() throws CsvValidationException, IOException {
+
+        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)),
+                new ArrayList<>(Arrays.asList(2, 3)),
+                inputFile, 0, ","));
+
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void nullCheck() throws CsvValidationException, IOException {
+        assertNull(IDLabFunctions.multipleLookup(null, new ArrayList<>(Collections.singletonList(2)), inputFile, 3, ","));
+        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), null, inputFile, 3, ","));
+        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), new ArrayList<>(Collections.singletonList(1)), inputFile, null, ","));
+
+        assertNull(IDLabFunctions.multipleLookup("3", name, comment, null, null, null, null, 1, 2,
+                null, null, null, inputFile, 0, ","));
+    }
+
+    public void anotherFileToHashmap() throws CsvValidationException, IOException {
+        name = "Venus";
+        classType = "A";
+        inputFile =  "src/test/resources/studentsCopy.csv";
+
+        assertEquals("1a",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, classType)),
+                        new ArrayList<>(Arrays.asList(1, 3)),
+                        inputFile, 0, ","));
+
     }
 
 }
