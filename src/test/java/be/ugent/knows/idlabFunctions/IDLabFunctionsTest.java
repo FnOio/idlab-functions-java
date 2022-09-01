@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -328,11 +329,32 @@ public class IDLabFunctionsTest {
 
         anotherFileToHashmap();
 
-        assertEquals(5,IDLabFunctions.getMultipleLookupStateMap().size());
+        assertEquals(71,IDLabFunctions.getMultipleLookupStateSet().size());
 
     }
 
     @Test
+    public void simpleMultipleLookupSizeOfMapCheck() throws CsvValidationException, IOException {
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+        assertEquals(23,IDLabFunctions.getMultipleLookupStateSet().size());
+
+    }
+
+    @Test
+    public void simpleMultipleLookupSizeOfCacheCheck() throws CsvValidationException, IOException {
+
+        assertEquals("2",
+                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
+                        new ArrayList<>(Arrays.asList(1, 2)),
+                        inputFile, 0, ","));
+        assertEquals(IDLabFunctions.getCache().size(),IDLabFunctions.getMultipleLookupStateSet().size());
+
+    }
+        @Test
     public void twoFilesWithSameSearchParameters() throws CsvValidationException, IOException {
         name = "Alexander";
         classType = "B";
@@ -351,7 +373,6 @@ public class IDLabFunctionsTest {
     }
 
 
-
     @Test
     public void columnIsOverLimit() throws CsvValidationException, IOException {
         assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)),
@@ -368,7 +389,7 @@ public class IDLabFunctionsTest {
 
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void nullCheck() throws CsvValidationException, IOException {
         assertNull(IDLabFunctions.multipleLookup(null, new ArrayList<>(Collections.singletonList(2)), inputFile, 3, ","));
         assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), null, inputFile, 3, ","));
