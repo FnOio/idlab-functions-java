@@ -1,5 +1,7 @@
 package be.ugent.knows.idlabFunctions;
 
+import be.ugent.knows.util.Cache;
+import be.ugent.knows.util.SearchParameters;
 import be.ugent.knows.util.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,13 +44,18 @@ public class IDLabFunctions {
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
-    private static final Map<List<String>, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
+    private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
+    private static final Map<String, List<String[]>> CACHE = new HashMap<>();
     private static String LOOKUP_STATE_INPUTFILE = "";
     private static Integer LOOKUP_STATE_FROM_COLUMN = -1;
     private static Integer LOOKUP_STATE_TO_COLUMN = -1;
 
-    public static Map<List<String>, String> getMultipleLookupStateMap(){
-        return MULTIPLE_LOOKUP_STATE_MAP;
+
+    public static Map<SearchParameters, String> getMultipleLookupStateSet(){
+        return Cache.getMultipleLookupStateMap();
+    }
+    public static Map<SearchParameters, String> getCache(){
+        return Cache.getCache();
     }
     public static boolean stringContainsOtherString(String str, String otherStr, String delimiter) {
         String[] split = str.split(delimiter);
@@ -632,11 +639,11 @@ public class IDLabFunctions {
     public static String lookupWithDelimiter(String searchString, String inputFile, Integer fromColumn, Integer toColumn, String delimiter) throws IOException, CsvValidationException {
 
         //check if the LOOKUP_STATE_MAP contains the right values
-           CSVReader reader = makeReader(inputFile, delimiter);
+           CSVReader reader = createReader(inputFile, delimiter);
            if(reader != null) {
                String[] nextLine = reader.readNext();
                if (fromColumn < 0 || toColumn < 0 || fromColumn >= nextLine.length || toColumn >= nextLine.length) {
-                   logger.error("Column index out of boundries; inputFile: \"{}\", fromColumn: \"{}\", toColumn: \"{}\"", inputFile, fromColumn, toColumn);
+                   logger.error("Column index out of boundaries; inputFile: \"{}\", fromColumn: \"{}\", toColumn: \"{}\"", inputFile, fromColumn, toColumn);
                    return null;
                }
                while (nextLine != null) {
@@ -671,54 +678,21 @@ public class IDLabFunctions {
      * @throws CsvValidationException
      */
 
+
     public static String multipleLookup(List<String> searchValues, List<Integer> fromColumns, String inputFile, Integer toColumn, String delimiter) throws IOException, CsvValidationException {
-        List<String> result = null;
-        CSVReader reader = makeReader(inputFile, delimiter);
+        SearchParameters pair = new SearchParameters(searchValues, fromColumns, inputFile);
 
-        if(reader != null) {
-            String[] nextLine = reader.readNext();
-
-            if (searchValues == null || fromColumns == null
-                    || toColumn == null || searchValues.isEmpty() || toColumn < 0
-                    || toColumn >= nextLine.length || searchValues.size() != fromColumns.size()) {
-                logger.error("Column index out of boundries; inputFile: \"{}\", fromColumns: \"{}\", toColumn: \"{}\"", inputFile, fromColumns, toColumn);
-                return null;
-            }
-            for (Integer index: fromColumns) {
-                if(index < 0 || index > nextLine.length){
-                    logger.error("Column index out of boundries; inputFile: \"{}\", fromColumns: \"{}\", toColumn: \"{}\"", inputFile, fromColumns, toColumn);
-                    return null;
-                }
-            }
-
-            while (nextLine != null && result == null) {
-                // only save first occurrence in hashmap
-                result = check(fromColumns, searchValues, nextLine);
-                nextLine = reader.readNext();
-
-            }
-            reader.close();
+        if (MULTIPLE_LOOKUP_STATE_MAP.containsKey(pair)) {
+            return MULTIPLE_LOOKUP_STATE_MAP.get(pair);
         }
 
-        if(result != null) {
-            MULTIPLE_LOOKUP_STATE_MAP.put(searchValues, result.get(toColumn));
+        if(!CACHE.containsKey(inputFile) || CACHE.get(inputFile) == null) {
+            CSVReader reader = createReader(inputFile, delimiter);
+            return Cache.fileToCache(searchValues, fromColumns, inputFile, toColumn, reader);
+        }else {
+            return Cache.readFromCache(searchValues, fromColumns, inputFile, toColumn);
         }
 
-
-        if (result == null) {
-            logger.error("The searchString is not found; searchString: \"{}\", inputFile: \"{}\", fromColumns: \"{}\"", searchValues, inputFile, fromColumns);
-            return null;
-        }
-        return result.get(toColumn);
-    }
-
-    private static List<String> check(List<Integer> fromColumns, List<String> searchValues, String[] nextLine){
-        for (int i = 0; i < fromColumns.size(); i++) {
-            if(!nextLine[fromColumns.get(i)].equals(searchValues.get(i))){
-                return null;
-            }
-        }
-        return Arrays.asList(nextLine);
     }
 
 
@@ -735,7 +709,7 @@ public class IDLabFunctions {
     }
 
 
-    private static CSVReader makeReader(String inputFile, String delimiter) throws IOException {
+    private static CSVReader createReader(String inputFile, String delimiter) throws IOException {
 
         if(inputFile != null){
             InputStream inputStream = Files.newInputStream(new File(inputFile).toPath());
