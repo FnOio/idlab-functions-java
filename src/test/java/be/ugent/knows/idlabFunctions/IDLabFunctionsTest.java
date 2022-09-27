@@ -411,4 +411,22 @@ public class IDLabFunctionsTest {
 
     }
 
+    @Test
+    public void testConcatSequenceNormal() {
+        String result = IDLabFunctions.concatSequence(Arrays.asList("een", "twee"), ",");
+        assertEquals("een,twee", result);
+    }
+
+    @Test
+    public void testConcatSequenceEmptySequence() {
+        String result = IDLabFunctions.concatSequence(Collections.emptyList(), ",");
+        assertEquals("", result);
+    }
+
+    @Test
+    public void testConcatSequenceNullDelimiter() {
+        String result = IDLabFunctions.concatSequence(Arrays.asList("een", "twee"), null);
+        assertEquals("eentwee", result);
+    }
+
 }
