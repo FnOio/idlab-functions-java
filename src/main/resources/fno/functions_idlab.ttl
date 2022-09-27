@@ -175,6 +175,14 @@ idlab-fn:concat
     fno:expects         ( idlab-fn:_str idlab-fn:_otherStr idlab-fn:_delimiter ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:concatSequence
+    a                   fno:Function ;
+    fno:name            "concatSequence" ;
+    rdfs:label          "concatSequence" ;
+    dcterms:description "Concatenates an rdf:seq of strings, optionally with a separator" ;
+    fno:expects         ( idlab-fn:_seq idlab-fn:_delimiter ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
 idlab-fn:lookup
     a                   fno:Function ;
     fno:name            "lookup" ;
@@ -278,6 +286,14 @@ idlab-fn:_listOut
     rdfs:label    "output list" ;
     fno:type      rdf:List ;
     fno:predicate idlab-fn:listOut .
+
+idlab-fn:_seq
+    a             fno:Parameter ;
+    fno:name      "rdf:Seq parameter" ;
+    fno:predicate rdf:_nnn ; # Similar to https://www.w3.org/TR/rdf-schema/#ch_containermembershipproperty
+                             # We can't use rdf:_nnn bc this would imply that _:exec also is an rdf:Seq, which is incorrect
+    fno:type      xsd:any ;
+    fno:required  "true"^^xsd:boolean .
 
 idlab-fn:_delimiter
     a             fno:Parameter ;
@@ -514,6 +530,12 @@ idlab-fn-m:concatMapping
     fno:function		idlab-fn:concat;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "concat" ] .
+
+idlab-fn-m:concatSequenceMapping
+    a                   fno:Mapping ;
+    fno:function		idlab-fn:concatSequence;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "concatSequence" ] .
 
 idlab-fn-m:lookupMapping
     a                   fno:Mapping ;
