@@ -612,6 +612,17 @@ public class IDLabFunctions {
         return str1 + sep + str2;
     }
 
+    /**
+     * Concatenates the elements of a list
+     * @param seq       A list of CharSequences
+     * @param delimiter An optional delimiter
+     * @return          A new String that is composed of the seq arguments
+     */
+    public static String concatSequence(final List<CharSequence> seq, final String delimiter) {
+        final String sep = delimiter == null? "" : delimiter;
+        return String.join(sep, seq);
+    }
+
 
     // TODO check whether this is the right place for this
     public static String jsonize(Object s) throws JsonProcessingException {
