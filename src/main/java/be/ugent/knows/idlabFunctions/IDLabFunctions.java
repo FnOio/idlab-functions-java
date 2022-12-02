@@ -215,7 +215,7 @@ public class IDLabFunctions {
      */
     public static String slugify(String str) {
         if (str != null) {
-            Slugify slg = new Slugify();
+            Slugify slg = Slugify.builder().build();
             return slg.slugify(str);
         }
         return null;
