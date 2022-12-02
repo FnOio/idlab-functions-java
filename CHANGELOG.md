@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Updated JUnit from 4.11 to 5.9.1
+- Updated Jackson core from 2.13.1 to 2.14.1
 
 ## [0.1.2] - 2022-09-02
 
