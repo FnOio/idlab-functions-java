@@ -25,11 +25,6 @@
             <id>repo.maven.apache.org</id>
             <url>https://repo.maven.apache.org/maven2/</url>
         </repository>
-        <!-- used for testing only -->
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
     </repositories>
 
     <dependencies>
