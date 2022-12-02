@@ -75,7 +75,7 @@ public class IDLabFunctions {
     public static List<String> dbpediaSpotlight(String text, String endpoint) {
         if (!text.equals("")) {
             try {
-                URL url = new URL(endpoint + "/annotate?text=" + URLEncoder.encode(text, "UTF-8"));
+                URL url = new URL(endpoint + "/annotate?text=" + URLEncoder.encode(text, StandardCharsets.UTF_8));
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("GET");
                 con.setRequestProperty("Accept", "application/json");
