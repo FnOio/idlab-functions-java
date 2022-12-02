@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+- Requires Java 11+ 
 - Updated JUnit from 4.11 to 5.9.1
 - Updated Jackson core from 2.13.1 to 2.14.1
 - Updated OpenCSV from 5.5.2 to 5.7.1
