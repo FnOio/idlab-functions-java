@@ -74,7 +74,7 @@ public class PersistentMapState implements AutoCloseable {
                         .of(String.class, String.class)
                         .averageKey(averageKey)
                         .averageValue(averageValue)
-                        .entries(10000)
+                        .entries(1000000)
                         .createPersistedTo(new File(stateFilePath));
             } catch (IOException e) {
                 throw new RuntimeException(e);
