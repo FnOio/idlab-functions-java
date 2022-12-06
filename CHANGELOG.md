@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+- Requires Java 11+ 
+- Updated JUnit from 4.11 to 5.9.1
+- Updated Jackson core from 2.13.1 to 2.14.1
+- Updated OpenCSV from 5.5.2 to 5.7.1
+- Updated Slugify from 2.5 to 3.0.2
+- Updated SLF4J from 1.7.36 to 2.0.5
+
 ## [0.1.2] - 2022-09-02
 
 ### Added
