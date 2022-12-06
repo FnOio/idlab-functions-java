@@ -46,10 +46,6 @@ public class IDLabFunctions {
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<String, List<String[]>> CACHE = new HashMap<>();
-    private static String LOOKUP_STATE_INPUTFILE = "";
-    private static Integer LOOKUP_STATE_FROM_COLUMN = -1;
-    private static Integer LOOKUP_STATE_TO_COLUMN = -1;
-
 
     public static Map<SearchParameters, String> getMultipleLookupStateSet(){
         return Cache.getMultipleLookupStateMap();
@@ -337,132 +333,9 @@ public class IDLabFunctions {
         return result;
     }
 
-    private static String updateStatePropertyRecord(Map<String, String> watchedMap,
-                                                    String hexKey, AtomicBoolean found, AtomicBoolean isDifferent,
-                                                    boolean isUnique,
-                                                    String storedStateRecord) {
-        //No need to check the properties, we just need to know if the
-        //given hexKey has already been seen in the state file.
-        if (isUnique) {
-            if (storedStateRecord.equals(hexKey)) {
-                found.set(true);
-            }
-            return storedStateRecord;
-        }
-
-        int split_idx = storedStateRecord.indexOf(':');
-        // Ignore if no split is possible
-        if (split_idx == -1) {
-            return storedStateRecord;
-        }
-        String storedHexKey = storedStateRecord.substring(0, split_idx);
-        if (!storedHexKey.equals(hexKey)) {
-            return storedStateRecord;
-        }
-
-        found.set(true);
-
-        List<String> propertyValPairs =
-                Arrays.stream(storedStateRecord.substring(split_idx + 1)
-                                .split("&"))
-                        .map(str -> {
-                            String[] propVal = str.split("=");
-                            String property = propVal[0];
-                            String storeVal = "NULL";
-                            // Data may not provide a given property value so try and fail gracefully
-                            try {
-                                storeVal = propVal[1];
-                            } catch (IndexOutOfBoundsException e) {
-                                // too bad
-                            }
-
-                            String watchedVal = watchedMap.getOrDefault(property, null);
-
-                            if (watchedVal != null && !watchedVal.equals(storeVal)) {
-                                isDifferent.set(true);
-                                storeVal = watchedVal;
-                            }
-
-                            return String.format("%s=%s", property, storeVal);
-                        })
-                        .collect(Collectors.toList());
-
-        return String.format("%s:%s", storedHexKey, String.join("&", propertyValPairs));
-    }
-
-
     private static Path getStateFilePath(String stateDirPathStr, int m_buckets, int templateHash) {
         String hexBucketFileName = Integer.toHexString(templateHash % m_buckets);
         return Paths.get(String.format("%s/%s.log", stateDirPathStr, hexBucketFileName));
-    }
-
-
-    /**
-     * The generation of the IRI depends on the value of the watched properties.
-     * If any of the watched properties changes in value or gets dropped, a unique IRI will be
-     * generated. Otherwise, null String will be returned.
-     * In order to check if the watched properties have changed, a file state is written to keep track of
-     * previously seen property values.
-     * A unique IRI will be generated from the provided "template" string by appending the current
-     * date timestamp.
-     *
-     * @param template             The template string used to generate unique IRI by appending current date timestamp
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched
-     * @param isUnique             A flag to indicate if the given template already creates unique IRI
-     * @param stateDirPathStr      String representation of the directory path in which the state of the function
-     *                             will be stored
-     * @return A unique IRI will be generated from the provided "template" string by appending the current
-     * date timestamp if possible. Otherwise, null is returned
-     */
-    public static String generateUniqueIRIOLD(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        //TODO: move this to the parameter of the function? (might get too bloated in RML definitions)
-        int m_buckets = 10;
-
-        Map<String, String> watchedMap = parsePropertyValueTemplate(Optional.ofNullable(watchedValueTemplate));
-
-        int templateHash = template.hashCode();
-        Path stateFilePath = getStateFilePath(stateDirPathStr, m_buckets, templateHash);
-
-        String hexKey = Integer.toHexString(templateHash);
-
-        List<String> outputRecords;
-        AtomicBoolean found = new AtomicBoolean(false);
-        AtomicBoolean isDifferent = new AtomicBoolean(false);
-        String output = null;
-
-        try {
-
-            Files.createDirectories(Paths.get(stateDirPathStr));
-            if (Files.notExists(stateFilePath)) {
-                Files.createFile(stateFilePath);
-            }
-
-            // Get and update the state records which will be rewritten back to the state file by overwriting
-            try (BufferedReader reader = new BufferedReader(new FileReader(stateFilePath.toFile()))) {
-                outputRecords = reader.lines()
-                        .map(s -> updateStatePropertyRecord(watchedMap, hexKey, found, isDifferent, isUnique, s))
-                        .collect(Collectors.toList());
-            }
-
-            if (!found.get()) {
-                String hexedStateRecord = (isUnique) ? hexKey : String.format("%s:%s", hexKey, watchedValueTemplate);
-                outputRecords.add(hexedStateRecord);
-            }
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(stateFilePath.toFile()))) {
-                for (String line : outputRecords) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            }
-
-            output = getOutput(template, isUnique, found, isDifferent);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return output;
     }
 
     private static String getOutput(String template, Boolean isUnique, AtomicBoolean found, AtomicBoolean isDifferent) {
