@@ -319,9 +319,9 @@ public class IDLabFunctions {
      *                             the form "key1=val1&key2=val2&..."
      * @return A map containing the parsed pairs of the properties which are being watched.
      */
-    private static Map<String, String> parsePropertyValueTemplate(Optional<String> watchedValueTemplate) {
+    private static Map<String, String> parsePropertyValueTemplate(final String watchedValueTemplate) {
         Map<String, String> result = new HashMap<>();
-        String watchedVal = watchedValueTemplate.orElse("");
+        String watchedVal = watchedValueTemplate == null ? "" : watchedValueTemplate;
 
         if (watchedVal.length() > 0) {
             Arrays.stream(watchedVal.split("&"))
@@ -439,8 +439,7 @@ public class IDLabFunctions {
 
         // null check just in case idlab-fn:_watchedProperty is not provided in the mapping file
 
-        Optional<String> watchedValueOption = Optional.ofNullable(watchedValueTemplate);
-        Map<String, String> watchedMap = parsePropertyValueTemplate(watchedValueOption);
+        Map<String, String> watchedMap = parsePropertyValueTemplate(watchedValueTemplate);
 
         int templateHash = template.hashCode();
         String stateFilePathStr = getStateFilePath(stateDirPathStr, m_buckets, templateHash).toString();
@@ -454,7 +453,7 @@ public class IDLabFunctions {
         if (keyValMap.containsKey(hexKey)) {
             found.set(true);
             String storedProp = keyValMap.get(hexKey);
-            Map<String, String> storedPropMap = parsePropertyValueTemplate(Optional.ofNullable(storedProp));
+            Map<String, String> storedPropMap = parsePropertyValueTemplate(storedProp);
             for (Map.Entry<String, String> kv : watchedMap.entrySet()) {
                 String prop = kv.getKey();
                 String val = kv.getValue();
