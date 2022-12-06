@@ -78,6 +78,13 @@
             <version>${slf4j.version}</version>
         </dependency>
 
+        <!-- a fast key value store -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-map</artifactId>
+            <version>3.24ea0</version>
+        </dependency>
+
         <!---->
         <!-- TEST DEPENDENCIES-->
         <!---->
