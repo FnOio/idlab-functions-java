@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.*;
@@ -239,7 +240,8 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = false;
 
-            IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            assertNotNull(firstUniqueIRI);
             String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
             assertNull(generated_iri);
         }
@@ -266,6 +268,20 @@ public class IDLabFunctionsTest {
             String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(template));
+        }
+
+        @Test
+        public void testSaveState() {
+            String template = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            assertNotNull(generated_iri);
+
+            IDLabFunctions.saveState();
+
+            assertTrue(new File(STATE_DIRECTORY).exists());
         }
     }
 

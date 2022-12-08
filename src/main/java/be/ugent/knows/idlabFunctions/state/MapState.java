@@ -12,7 +12,7 @@ public interface MapState extends AutoCloseable {
      * Associates the specified value with the specified key in this map
      * (optional operation).  If the map previously contained a mapping for
      * the key, the old value is replaced by the specified value.
-     *
+     * <br>
      * Note that the state is only persisted to file upon {@link #close()}.
      *
      * @param key key with which the specified value is to be associated
@@ -30,4 +30,9 @@ public interface MapState extends AutoCloseable {
      * Deletes all state: removes state files and clears the state in memory.
      */
     void deleteAllState();
+
+    /**
+     * Writes all state to disk, keeping all data in memory.
+     */
+    void saveAllState();
 }

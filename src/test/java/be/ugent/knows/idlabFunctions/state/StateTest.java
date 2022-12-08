@@ -116,4 +116,32 @@ public class StateTest {
             System.out.println("charsWritten = " + charsWritten);
         } 
     }
+
+    @Test
+    public void testSaveAllState() throws Exception {
+        try (MapState state = new SimpleInMemoryMapState()) {
+            // first create a state by putting something in it
+            String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
+            assertNull(previous);
+
+            state.saveAllState();
+
+            assertTrue(tmpStateFile1.exists());
+        }
+    }
+
+    @Test
+    public void testDeleteAllState() {
+        try (MapState state = new SimpleInMemoryMapState()) {
+            // first create a state by putting something in it
+            String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
+            assertNull(previous);
+
+            state.deleteAllState();
+
+            assertFalse(tmpStateFile1.exists());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

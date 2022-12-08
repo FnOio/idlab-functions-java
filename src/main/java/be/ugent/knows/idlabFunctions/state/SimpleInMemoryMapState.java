@@ -38,13 +38,7 @@ public class SimpleInMemoryMapState implements MapState {
      */
     @Override
     public synchronized void close() {
-        stateFileToMap.forEach((stateFilePath, stateMap) -> {
-            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(stateFilePath, false))) {
-                out.writeObject(stateMap);
-            } catch (IOException e) {
-                log.warn("Cannot save state map to {}", stateFilePath);
-            }
-        });
+        saveAllState();
         stateFileToMap.clear();
     }
 
@@ -56,5 +50,16 @@ public class SimpleInMemoryMapState implements MapState {
             }
         });
         stateFileToMap.clear();
+    }
+
+    @Override
+    public synchronized void saveAllState() {
+        stateFileToMap.forEach((stateFilePath, stateMap) -> {
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(stateFilePath, false))) {
+                out.writeObject(stateMap);
+            } catch (IOException e) {
+                log.warn("Cannot save state map to {}", stateFilePath);
+            }
+        });
     }
 }
