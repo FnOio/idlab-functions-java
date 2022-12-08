@@ -1,13 +1,12 @@
 package be.ugent.knows.idlabFunctions;
 
-import be.ugent.knows.util.Utils;
 import com.opencsv.exceptions.CsvValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -224,13 +223,12 @@ public class IDLabFunctionsTest {
 
     public static class LDESGenerationTests {
 
-        private static final String STATE_DIRECTORY = "/tmp/test-state";
+        private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState1").getPath();
 
 
         @AfterEach
-        public void cleanUp() throws IOException {
+        public void cleanUp() {
             IDLabFunctions.resetState();
-            Utils.deleteDirectory(Paths.get(STATE_DIRECTORY).toFile());
         }
 
         @Test
@@ -239,8 +237,9 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = false;
 
-            IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            assertNotNull(firstUniqueIRI);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertNull(generated_iri);
         }
 
@@ -251,7 +250,7 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = true;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertEquals(template, generated_iri);
 
         }
@@ -263,9 +262,23 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(template));
+        }
+
+        @Test
+        public void testSaveState() {
+            String template = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+
+            IDLabFunctions.saveState();
+
+            assertTrue(new File(STATE_FILE).exists());
         }
     }
 

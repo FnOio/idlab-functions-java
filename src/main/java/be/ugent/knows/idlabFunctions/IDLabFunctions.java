@@ -1,5 +1,7 @@
 package be.ugent.knows.idlabFunctions;
 
+import be.ugent.knows.idlabFunctions.state.MapState;
+import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
 import be.ugent.knows.util.Cache;
 import be.ugent.knows.util.SearchParameters;
 import be.ugent.knows.util.Utils;
@@ -18,38 +20,30 @@ import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import com.opencsv.exceptions.CsvValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private static Map<String, Map<String, String>> LDES_FILE_STATE_MAP = new HashMap<>();
-    private static Path STATE_DIR = null;
+    private final static MapState UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<String, List<String[]>> CACHE = new HashMap<>();
-    private static String LOOKUP_STATE_INPUTFILE = "";
-    private static Integer LOOKUP_STATE_FROM_COLUMN = -1;
-    private static Integer LOOKUP_STATE_TO_COLUMN = -1;
-
 
     public static Map<SearchParameters, String> getMultipleLookupStateSet(){
         return Cache.getMultipleLookupStateMap();
@@ -314,88 +308,13 @@ public class IDLabFunctions {
         return normalizeDateTimeWithLang(dateTimeStr, pattern, Locale.getDefault().getLanguage());
     }
 
-
-    /**
-     * Returns a HashMap containing the key,value pairs of the watched properties from the given
-     * template string of the form  "key1=val1&key2=val2&...."
-     *
-     * @param watchedValueTemplate Input string template representing the key,value pairs of
-     *                             the form "key1=val1&key2=val2&..."
-     * @return A map containing the parsed pairs of the properties which are being watched.
-     */
-    private static Map<String, String> parsePropertyValueTemplate(Optional<String> watchedValueTemplate) {
-        Map<String, String> result = new HashMap<>();
-        String watchedVal = watchedValueTemplate.orElse("");
-
-        if (watchedVal.length() > 0) {
-            Arrays.stream(watchedVal.split("&"))
-                    .map(s -> s.split("="))
-                    .filter(sArr -> sArr.length == 2)
-                    .forEach(sArr -> result.put(sArr[0], sArr[1]));
-        }
-
-        return result;
+    public static void saveState() {
+        UNIQUE_IRI_STATE.saveAllState();
     }
 
-    private static String updateStatePropertyRecord(Map<String, String> watchedMap,
-                                                    String hexKey, AtomicBoolean found, AtomicBoolean isDifferent,
-                                                    boolean isUnique,
-                                                    String storedStateRecord) {
-        //No need to check the properties, we just need to know if the
-        //given hexKey has already been seen in the state file.
-        if (isUnique) {
-            if (storedStateRecord.equals(hexKey)) {
-                found.set(true);
-            }
-            return storedStateRecord;
-        }
-
-        int split_idx = storedStateRecord.indexOf(':');
-        // Ignore if no split is possible
-        if (split_idx == -1) {
-            return storedStateRecord;
-        }
-        String storedHexKey = storedStateRecord.substring(0, split_idx);
-        if (!storedHexKey.equals(hexKey)) {
-            return storedStateRecord;
-        }
-
-        found.set(true);
-
-        List<String> propertyValPairs =
-                Arrays.stream(storedStateRecord.substring(split_idx + 1)
-                                .split("&"))
-                        .map(str -> {
-                            String[] propVal = str.split("=");
-                            String property = propVal[0];
-                            String storeVal = "NULL";
-                            // Data may not provide a given property value so try and fail gracefully
-                            try {
-                                storeVal = propVal[1];
-                            } catch (IndexOutOfBoundsException e) {
-                                // too bad
-                            }
-
-                            String watchedVal = watchedMap.getOrDefault(property, null);
-
-                            if (watchedVal != null && !watchedVal.equals(storeVal)) {
-                                isDifferent.set(true);
-                                storeVal = watchedVal;
-                            }
-
-                            return String.format("%s=%s", property, storeVal);
-                        })
-                        .collect(Collectors.toList());
-
-        return String.format("%s:%s", storedHexKey, String.join("&", propertyValPairs));
+    public static void resetState() {
+        UNIQUE_IRI_STATE.deleteAllState();
     }
-
-
-    private static Path getStateFilePath(String stateDirPathStr, int m_buckets, int templateHash) {
-        String hexBucketFileName = Integer.toHexString(templateHash % m_buckets);
-        return Paths.get(String.format("%s/%s.log", stateDirPathStr, hexBucketFileName));
-    }
-
 
     /**
      * The generation of the IRI depends on the value of the watched properties.
@@ -414,190 +333,19 @@ public class IDLabFunctions {
      * @return A unique IRI will be generated from the provided "template" string by appending the current
      * date timestamp if possible. Otherwise, null is returned
      */
-    public static String generateUniqueIRIOLD(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        //TODO: move this to the parameter of the function? (might get too bloated in RML definitions)
-        int m_buckets = 10;
-
-        Map<String, String> watchedMap = parsePropertyValueTemplate(Optional.ofNullable(watchedValueTemplate));
-
-        int templateHash = template.hashCode();
-        Path stateFilePath = getStateFilePath(stateDirPathStr, m_buckets, templateHash);
-
-        String hexKey = Integer.toHexString(templateHash);
-
-        List<String> outputRecords;
-        AtomicBoolean found = new AtomicBoolean(false);
-        AtomicBoolean isDifferent = new AtomicBoolean(false);
-        String output = null;
-
-        try {
-
-            Files.createDirectories(Paths.get(stateDirPathStr));
-            if (Files.notExists(stateFilePath)) {
-                Files.createFile(stateFilePath);
-            }
-
-            // Get and update the state records which will be rewritten back to the state file by overwriting
-            try (BufferedReader reader = new BufferedReader(new FileReader(stateFilePath.toFile()))) {
-                outputRecords = reader.lines()
-                        .map(s -> updateStatePropertyRecord(watchedMap, hexKey, found, isDifferent, isUnique, s))
-                        .collect(Collectors.toList());
-            }
-
-            if (!found.get()) {
-                String hexedStateRecord = (isUnique) ? hexKey : String.format("%s:%s", hexKey, watchedValueTemplate);
-                outputRecords.add(hexedStateRecord);
-            }
-
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(stateFilePath.toFile()))) {
-                for (String line : outputRecords) {
-                    writer.write(line);
-                    writer.newLine();
-                }
-            }
-
-            output = getOutput(template, isUnique, found, isDifferent);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return output;
-    }
-
-    private static String getOutput(String template, Boolean isUnique, AtomicBoolean found, AtomicBoolean isDifferent) {
-        // The unique IRI will be generated if there's any differences found with the corresponding record in
-        // the state file
-        String output = null;
-        if (isDifferent.get() || !found.get()) {
-            logger.debug("Update found! Generating IRI...");
-            if (isUnique) {
-                output = template;
-            } else {
+    public static String generateUniqueIRI(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+        if (isUnique) {
+            return template;
+        } else {
+            String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(stateDirPathStr, template, watchedValueTemplate);
+            if (oldWatchedPropertyString == null || !oldWatchedPropertyString.equals(watchedValueTemplate)) {
                 OffsetDateTime now = OffsetDateTime.now();
                 DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-                output = String.format("%s#%s", template, formatter.format(now));
+                return template + '#' + formatter.format(now);
+            } else {
+                return null;
             }
         }
-        return output;
-    }
-
-    private static void initStateFile(Path stateDirPath) {
-        try (Stream<Path> statePaths = Files.find(stateDirPath, 1, (filePath, fileAttr) -> fileAttr.isRegularFile())) {
-
-            Stream<AbstractMap.SimpleImmutableEntry> readers = statePaths.map(path -> {
-                try {
-                    return new AbstractMap.SimpleImmutableEntry(path, new BufferedReader(new FileReader(path.toFile())));
-                } catch (FileNotFoundException e) {
-                    return null;
-                }
-            }).filter(Objects::nonNull);
-
-
-            readers.forEach(entry -> {
-                try (BufferedReader bReader = (BufferedReader) entry.getValue()) {
-                    String fileName = ((Path) entry.getKey()).toString();
-                    bReader.lines().forEach(
-                            line -> {
-                                String[] pairs = line.split(":");
-                                String key = pairs[0];
-                                String val = null;
-                                try {
-                                    val = pairs[1];
-                                } catch (IndexOutOfBoundsException e) {
-                                    e.printStackTrace();
-                                }
-                                LDES_FILE_STATE_MAP.computeIfAbsent(fileName, k -> new HashMap<>()).put(key, val);
-                            }
-                    );
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            });
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void saveState() throws IOException {
-        if (Objects.nonNull(STATE_DIR)) {
-
-            Files.createDirectories(STATE_DIR);
-            for (Map.Entry<String, Map<String, String>> entry : LDES_FILE_STATE_MAP.entrySet()) {
-
-                Path file = Paths.get(entry.getKey());
-                Map<String, String> storedMap = entry.getValue();
-
-                if (Files.notExists(file)) {
-                    Files.createFile(file);
-                }
-
-
-                try (BufferedWriter writer = new BufferedWriter(new FileWriter(file.toFile()))) {
-                    for (Map.Entry<String, String> record : storedMap.entrySet()) {
-                        String line = record.getKey();
-                        if (record.getValue() != null) {
-                            line = String.format("%s:%s", record.getKey(), record.getValue());
-                        }
-
-                        writer.write(line);
-                        writer.newLine();
-                    }
-                }
-
-            }
-        }
-
-    }
-
-    public static void resetState() {
-        LDES_FILE_STATE_MAP = new HashMap<>();
-        STATE_DIR = null;
-    }
-
-    public static String generateUniqueIRI(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        if (STATE_DIR == null) {
-            STATE_DIR = Paths.get(stateDirPathStr);
-            initStateFile(STATE_DIR);
-        }
-        int m_buckets = 10;
-
-        // null check just in case idlab-fn:_watchedProperty is not provided in the mapping file
-
-        Optional<String> watchedValueOption = Optional.ofNullable(watchedValueTemplate);
-        Map<String, String> watchedMap = parsePropertyValueTemplate(watchedValueOption);
-
-        int templateHash = template.hashCode();
-        String stateFilePathStr = getStateFilePath(stateDirPathStr, m_buckets, templateHash).toString();
-
-        String hexKey = Integer.toHexString(templateHash);
-
-        AtomicBoolean found = new AtomicBoolean(false);
-        AtomicBoolean isDifferent = new AtomicBoolean(false);
-
-        Map<String, String> keyValMap = LDES_FILE_STATE_MAP.computeIfAbsent(stateFilePathStr, f -> new HashMap<>());
-        if (keyValMap.containsKey(hexKey)) {
-            found.set(true);
-            String storedProp = keyValMap.get(hexKey);
-            Map<String, String> storedPropMap = parsePropertyValueTemplate(Optional.ofNullable(storedProp));
-            for (Map.Entry<String, String> kv : watchedMap.entrySet()) {
-                String prop = kv.getKey();
-                String val = kv.getValue();
-
-                String storedVal = storedPropMap.getOrDefault(prop, null);
-                if (!val.equals(storedVal)) {
-                    isDifferent.set(true);
-                }
-            }
-
-        }
-        keyValMap.put(hexKey, watchedValueTemplate);
-
-
-        return getOutput(template, isUnique, found, isDifferent);
-
     }
 
     /**
