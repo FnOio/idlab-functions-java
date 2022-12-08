@@ -1,6 +1,10 @@
 package be.ugent.knows.idlabFunctions.state;
 
 /**
+ * A MapState is a map of states, where the key is a path to a file where
+ * the state is persisted and the value is a state. A state is again a
+ * map of key - value Strings.
+ *
  * <p>Copyright 2022 IDLab (Ghent University - imec)</p>
  *
  * @author Gerald Haesendonck
