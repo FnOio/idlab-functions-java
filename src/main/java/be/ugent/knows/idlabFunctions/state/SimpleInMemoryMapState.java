@@ -33,6 +33,9 @@ public class SimpleInMemoryMapState implements MapState {
         return map.put(key, value);
     }
 
+    /**
+     * Closes the state: state is persisted to disk before clearing the state in memory.
+     */
     @Override
     public synchronized void close() {
         stateFileToMap.forEach((stateFilePath, stateMap) -> {
