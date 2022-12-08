@@ -1,18 +1,15 @@
 package be.ugent.knows.idlabFunctions;
 
-import be.ugent.knows.util.Utils;
 import com.opencsv.exceptions.CsvValidationException;
-import org.hamcrest.CoreMatchers;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class IDLabFunctionsTest {
 
@@ -48,23 +45,24 @@ public class IDLabFunctionsTest {
 
 
     @Test
+    @Disabled
     public void dbpediaSpotlight() {
-        String endpoint = "http://193.190.127.195/dbpedia-spotlight/rest";
-        List<String> entities = IDLabFunctions.dbpediaSpotlight("Barack Obama", endpoint);
-        ArrayList<String> expected = new ArrayList<>();
-        expected.add("http://dbpedia.org/resource/Barack_Obama");
-
-        assertThat(entities, CoreMatchers.is(expected));
-
-        entities = IDLabFunctions.dbpediaSpotlight("", endpoint);
-        expected = new ArrayList<>();
-
-        assertThat(entities, CoreMatchers.is(expected));
-
-        entities = IDLabFunctions.dbpediaSpotlight("a", endpoint);
-        expected = new ArrayList<>();
-
-        assertThat(entities, CoreMatchers.is(expected));
+//        String endpoint = "http://193.190.127.195/dbpedia-spotlight/rest";
+//        List<String> entities = IDLabFunctions.dbpediaSpotlight("Barack Obama", endpoint);
+//        ArrayList<String> expected = new ArrayList<>();
+//        expected.add("http://dbpedia.org/resource/Barack_Obama");
+//
+//        assertThat(entities, CoreMatchers.is(expected));
+//
+//        entities = IDLabFunctions.dbpediaSpotlight("", endpoint);
+//        expected = new ArrayList<>();
+//
+//        assertThat(entities, CoreMatchers.is(expected));
+//
+//        entities = IDLabFunctions.dbpediaSpotlight("a", endpoint);
+//        expected = new ArrayList<>();
+//
+//        assertThat(entities, CoreMatchers.is(expected));
     }
 
     @Test
@@ -225,13 +223,12 @@ public class IDLabFunctionsTest {
 
     public static class LDESGenerationTests {
 
-        private static final String STATE_DIRECTORY = "/tmp/test-state";
+        private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState1").getPath();
 
 
-        @After
-        public void cleanUp() throws IOException {
+        @AfterEach
+        public void cleanUp() {
             IDLabFunctions.resetState();
-            Utils.deleteDirectory(Paths.get(STATE_DIRECTORY).toFile());
         }
 
         @Test
@@ -240,8 +237,9 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = false;
 
-            IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            assertNotNull(firstUniqueIRI);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertNull(generated_iri);
         }
 
@@ -252,7 +250,7 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = true;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertEquals(template, generated_iri);
 
         }
@@ -264,9 +262,23 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_DIRECTORY);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(template));
+        }
+
+        @Test
+        public void testSaveState() {
+            String template = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+
+            IDLabFunctions.saveState();
+
+            assertTrue(new File(STATE_FILE).exists());
         }
     }
 
@@ -389,10 +401,11 @@ public class IDLabFunctionsTest {
 
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void nullCheck() throws CsvValidationException, IOException {
-        assertNull(IDLabFunctions.multipleLookup(null, new ArrayList<>(Collections.singletonList(2)), inputFile, 3, ","));
-        assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), null, inputFile, 3, ","));
+        
+        assertThrows(IllegalArgumentException.class, () -> IDLabFunctions.multipleLookup(null, new ArrayList<>(Collections.singletonList(2)), inputFile, 3, ","));
+        assertThrows(IllegalArgumentException.class, () -> IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), null, inputFile, 3, ","));
         assertNull(IDLabFunctions.multipleLookup(new ArrayList<>(Collections.singletonList(name)), new ArrayList<>(Collections.singletonList(1)), inputFile, null, ","));
 
         assertNull(IDLabFunctions.multipleLookup("3", name, comment, null, null, null, null, 1, 2,
