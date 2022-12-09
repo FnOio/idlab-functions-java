@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+- Replaced SimpleInMemoryMapState by MapDBState; this uses memory mapped files to keep state.
+
 ## [0.1.3] - 2022-12-08
 
 ### Changed
