@@ -1,7 +1,7 @@
 package be.ugent.knows.idlabFunctions;
 
+import be.ugent.knows.idlabFunctions.state.MapDBState;
 import be.ugent.knows.idlabFunctions.state.MapState;
-import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
 import be.ugent.knows.util.Cache;
 import be.ugent.knows.util.SearchParameters;
 import be.ugent.knows.util.Utils;
@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private final static MapState UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
+    private final static MapState UNIQUE_IRI_STATE = new MapDBState();
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
