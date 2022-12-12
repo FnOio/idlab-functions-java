@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- MapDBContainer: creates parent dir of state file if it doesn't exist. (IDLab issue [#5](https://gitlab.ilabt.imec.be/KNoWS/fno/lib/idlab-functions-java/-/issues/5))
+
 ## [0.1.4] - 2022-12-09
 
 ### Changed
