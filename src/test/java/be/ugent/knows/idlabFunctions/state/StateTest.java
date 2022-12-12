@@ -1,6 +1,7 @@
 package be.ugent.knows.idlabFunctions.state;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -172,7 +174,7 @@ public class StateTest {
 
     @ParameterizedTest
     @MethodSource("states")
-    public void testSaveAllState(MapState state) throws Exception {
+    public void testSaveAllState(MapState state) {
         // first create a state by putting something in it
         String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
         assertNull(previous);
@@ -194,5 +196,21 @@ public class StateTest {
 
         assertFalse(tmpStateFile1.exists());
         state.deleteAllState();
+    }
+
+    @Test
+    public void testNonExistingParentStatePath() throws Exception {
+        String stateFile = Paths.get(System.getProperty("java.io.tmpdir"), "somedir", "tmpState").toAbsolutePath().toString();
+        try (MapState state = new MapDBState()) {
+            state.put(stateFile, "key", "value");
+            assertTrue(new File(stateFile).exists());
+        } finally {
+            File stateFileFile = new File(stateFile);
+            if (stateFileFile.delete()) {
+                if (!stateFileFile.getParentFile().delete()) {
+                    fail("Could not delete state file " + stateFileFile);
+                }
+            }
+        }
     }
 }
