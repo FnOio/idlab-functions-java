@@ -337,8 +337,9 @@ public class IDLabFunctions {
         if (isUnique) {
             return template;
         } else {
-            String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(stateDirPathStr, template, watchedValueTemplate);
-            if (oldWatchedPropertyString == null || !oldWatchedPropertyString.equals(watchedValueTemplate)) {
+            String newWatchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+            String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(stateDirPathStr, template, newWatchedPropertyString);
+            if (oldWatchedPropertyString == null || !oldWatchedPropertyString.equals(newWatchedPropertyString)) {
                 OffsetDateTime now = OffsetDateTime.now();
                 DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
                 return template + '#' + formatter.format(now);
@@ -346,6 +347,18 @@ public class IDLabFunctions {
                 return null;
             }
         }
+    }
+
+    /**
+     * Sorts the properties from a given resolved rr:template by property name. E.g.: if the template is
+     * {@code b=1&a=3} the the result will be {@code a=3&b=1}
+     * @param watchedValueTemplate  Property-value template to sort
+     * @return  The same property-value template sorted according to property name.
+     */
+    static String sortWatchedProperties(final String watchedValueTemplate) {
+        String[] propertyAndValues = watchedValueTemplate.split("&");   // TODO: in theory rr:tamplates are more complex than this...
+        Arrays.sort(propertyAndValues);
+        return String.join("&", propertyAndValues);
     }
 
     /**

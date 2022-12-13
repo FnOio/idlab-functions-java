@@ -283,6 +283,11 @@ public class IDLabFunctionsTest {
     }
 
     @Test
+    public void testsortWatchedProperties() {
+        assertEquals("a=1&b=2", IDLabFunctions.sortWatchedProperties("b=2&a=1"));
+    }
+
+    @Test
     public void lookup() throws CsvValidationException, IOException {
         String searchString = "A";
         String inputFile = "src/test/resources/class.csv";
