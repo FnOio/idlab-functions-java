@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.1.6]
+
+### Fixed
+- `IDLabFunctions.generateUniqueIRI`: sort watched properties before checking, because the order in the given input string may vary.
 
 ## [0.1.5] - 2022-12-12
 - MapDBContainer: creates parent dir of state file if it doesn't exist. (IDLab issue [#5](https://gitlab.ilabt.imec.be/KNoWS/fno/lib/idlab-functions-java/-/issues/5))
