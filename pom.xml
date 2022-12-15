@@ -6,7 +6,7 @@
 
     <groupId>be.ugent.idlab.knows</groupId>
     <artifactId>idlab-functions-java</artifactId>
-    <version>0.1.6</version>
+    <version>0.1.7-SNAPSHOT</version>
     <name>idlab-functions-java</name>
     <url>https://fno.io/</url>
 
