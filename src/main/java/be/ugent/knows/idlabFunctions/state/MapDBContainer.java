@@ -55,6 +55,8 @@ public class MapDBContainer {
         // make an executor service that does a commit on the mapDB every 10 seconds
         committer = Executors.newSingleThreadScheduledExecutor();
         committer.scheduleAtFixedRate(mapDB::commit, 10, 10, TimeUnit.SECONDS);
+
+        addShutDownHook();
     }
     public String put(String key, String value) {
         return map.put(key, value);
@@ -68,5 +70,13 @@ public class MapDBContainer {
 
     public void commit() {
         mapDB.commit();
+    }
+
+    // add a ShutDownHook to close everything when JVM stops
+    private void addShutDownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.debug("Running shutdown hook; closing mapdb");
+            close();
+        }));
     }
 }
