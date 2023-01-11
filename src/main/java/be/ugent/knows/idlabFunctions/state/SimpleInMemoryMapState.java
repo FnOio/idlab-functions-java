@@ -80,4 +80,13 @@ public class SimpleInMemoryMapState implements MapState {
             }
         });
     }
+
+    @Override
+    public synchronized long count(final String stateFilePath) {
+        if (stateFileToMap.containsKey(stateFilePath)) {
+            return stateFileToMap.get(stateFilePath).size();
+        } else {
+            return 0;
+        }
+    }
 }

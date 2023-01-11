@@ -62,6 +62,17 @@ public class MapDBState implements MapState {
     }
 
     @Override
+    public long count(final String stateFilePath) {
+        synchronized (stateFileToMap) {
+            if (stateFileToMap.containsKey(stateFilePath)) {
+                return stateFileToMap.get(stateFilePath).count();
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    @Override
     public void close() {
         synchronized (stateFileToMap) {
             stateFileToMap.forEach((stateFilePath, mapContainer) -> mapContainer.close());

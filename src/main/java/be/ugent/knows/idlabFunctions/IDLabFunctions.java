@@ -30,7 +30,6 @@ import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -340,9 +339,8 @@ public class IDLabFunctions {
             String newWatchedPropertyString = sortWatchedProperties(watchedValueTemplate);
             String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(stateDirPathStr, template, newWatchedPropertyString);
             if (oldWatchedPropertyString == null || !oldWatchedPropertyString.equals(newWatchedPropertyString)) {
-                OffsetDateTime now = OffsetDateTime.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
-                return template + '#' + formatter.format(now);
+                long nrOfIRIs = UNIQUE_IRI_STATE.count(stateDirPathStr);
+                return template + '#' + Long.toString(nrOfIRIs, Character.MAX_RADIX);
             } else {
                 return null;
             }
@@ -473,7 +471,7 @@ public class IDLabFunctions {
                                               String inputFile, Integer toColumn, String delimiter) throws IOException, CsvValidationException {
         List<String> values = new ArrayList<>(Arrays.asList(firstStr, secondStr, thirdStr, fourthStr, fifthStr, sixthStr))
                 .stream().filter(Objects::nonNull)
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());
         List<Integer> indexes = new ArrayList<>(Arrays.asList(first, second, third, fourth, fifth, sixth))
                 .stream().filter(Objects::nonNull)
                 .collect(Collectors.toList());

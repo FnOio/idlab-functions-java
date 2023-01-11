@@ -62,6 +62,10 @@ public class MapDBContainer {
         return map.put(key, value);
     }
 
+    public long count() {
+        return map.sizeLong();
+    }
+
     public void close() {
         committer.shutdown();
         map.close();
