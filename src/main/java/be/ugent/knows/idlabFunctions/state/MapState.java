@@ -39,4 +39,11 @@ public interface MapState extends AutoCloseable {
      * Writes all state to disk, keeping all data in memory.
      */
     void saveAllState();
+
+    /**
+     * Counts the number of entries in the state for a given state file path.
+     * @param stateFilePath The path of this state map's persistance file.
+     * @return              The number of entries in the state.
+     */
+    long count(final String stateFilePath);
 }

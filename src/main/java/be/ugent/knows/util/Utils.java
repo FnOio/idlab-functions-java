@@ -102,7 +102,7 @@ public class Utils {
     public static String fileToString(final File file) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         Files.copy(file.toPath(), os);
-        return os.toString(StandardCharsets.UTF_8.name());
+        return os.toString(StandardCharsets.UTF_8);
     }
 
     public static void deleteDirectory(final File directory) throws IOException {
