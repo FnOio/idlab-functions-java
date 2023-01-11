@@ -315,6 +315,14 @@ public class IDLabFunctions {
         UNIQUE_IRI_STATE.deleteAllState();
     }
 
+    public static void close() {
+        try {
+            UNIQUE_IRI_STATE.close();
+        } catch (Exception e) {
+            logger.warn("Cannot close state.", e);
+        }
+    }
+
     /**
      * The generation of the IRI depends on the value of the watched properties.
      * If any of the watched properties changes in value or gets dropped, a unique IRI will be

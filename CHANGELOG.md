@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
+- Added close() method to IDLabFunctions.
 - Added a `ShutDownHook` to close everything properly when JVM stops for some reason.
 - GenerateUniqueIRI: use nr of unique IRIs generated so far to generate next unique IRI.
 
