@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a `ShutDownHook` to close everything properly when JVM stops for some reason.
 - GenerateUniqueIRI: use nr of unique IRIs generated so far to generate next unique IRI.
 
-## [0.1.6]
+## [0.1.6] - 2022-12-15
 
 ### Fixed
 - `IDLabFunctions.generateUniqueIRI`: sort watched properties before checking, because the order in the given input string may vary.
@@ -60,7 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code extracted from [RMLMapper](https://github.com/RMLio/rmlmapper-java)
 
-[0.2.0]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.5...v0.2.0
+[0.2.0]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.6...v0.2.0
+[0.1.6]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.2...v0.1.3
