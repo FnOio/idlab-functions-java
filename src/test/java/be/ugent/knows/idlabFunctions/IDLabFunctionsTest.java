@@ -247,7 +247,7 @@ public class IDLabFunctionsTest {
         @Test
         public void generateUniqueIRI() {
             String template = "http://example.com/sensor2/";
-            String value = "pressure=5";
+            String value = null;
             boolean isUnique = true;
 
             String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
@@ -279,6 +279,66 @@ public class IDLabFunctionsTest {
             IDLabFunctions.saveState();
 
             assertTrue(new File(STATE_FILE).exists());
+        }
+
+        @Test
+        public void testDefaultStateFile() throws IOException {
+            String template = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, null);
+            assertNotNull(generated_iri);
+
+            // check state dir
+            final File stateFile = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state");
+            assertTrue(stateFile.exists());
+            IDLabFunctions.close();
+
+            // remove it
+            if (!stateFile.delete()) {
+                throw new IOException(stateFile + "should be deleted.");
+            }
+        }
+
+        @Test
+        public void testTmpStateFile() throws IOException {
+            String template = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, "__tmp");
+            assertNotNull(generated_iri);
+
+            // check state dir
+            final File stateFile = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state");
+            assertTrue(stateFile.exists());
+            IDLabFunctions.close();
+
+            // remove it
+            if (!stateFile.delete()) {
+                throw new IOException(stateFile + "should be deleted.");
+            }
+        }
+
+        @Test
+        public void testWorkingDirState() throws IOException {
+            String template = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, "__working_dir");
+            assertNotNull(generated_iri);
+
+            // check state dir
+            final File stateFile = new File(System.getProperty("user.dir"), "unique_iri_state");
+            assertTrue(stateFile.exists());
+            IDLabFunctions.close();
+
+            // remove it
+            if (!stateFile.delete()) {
+                throw new IOException(stateFile + "should be deleted.");
+            }
         }
     }
 

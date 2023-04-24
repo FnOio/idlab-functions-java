@@ -332,26 +332,50 @@ public class IDLabFunctions {
      * A unique IRI will be generated from the provided "template" string by appending the current
      * date timestamp.
      *
-     * @param template             The template string used to generate unique IRI by appending current date timestamp
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched
-     * @param isUnique             A flag to indicate if the given template already creates unique IRI
-     * @param stateDirPathStr      String representation of the directory path in which the state of the function
-     *                             will be stored
-     * @return A unique IRI will be generated from the provided "template" string by appending the current
-     * date timestamp if possible. Otherwise, null is returned
+     * @param template             The template string used to generate unique IRI. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
+     *                             {@code true}, this function returns the value of the {@code template} parameters.
+     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
+     *                             same value as the previous call then there's no update and this function returns {@code null}.
+     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
+     *                             this function returns an IRI composed of the template + a unique string.
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             </ul>
+     * @return A unique IRI will be generated from the provided "template" string by appending a unique string
+     * if possible. Otherwise, null is returned.
      */
     public static String generateUniqueIRI(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        if (isUnique) {
-            return template;
-        } else {
+        if (isUnique == null || !isUnique) {
+            final String actualStateDirPathStr;
+            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
+                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state").getPath();
+            } else if (stateDirPathStr.equals("__working_dir")) {
+                actualStateDirPathStr = new File(System.getProperty("user.dir"), "unique_iri_state").getPath();
+            } else {
+                actualStateDirPathStr = stateDirPathStr;
+            }
             String newWatchedPropertyString = sortWatchedProperties(watchedValueTemplate);
-            String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(stateDirPathStr, template, newWatchedPropertyString);
+            String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(actualStateDirPathStr, template, newWatchedPropertyString);
             if (oldWatchedPropertyString == null || !oldWatchedPropertyString.equals(newWatchedPropertyString)) {
-                long nrOfIRIs = UNIQUE_IRI_STATE.count(stateDirPathStr);
+                long nrOfIRIs = UNIQUE_IRI_STATE.count(actualStateDirPathStr);
                 return template + '#' + Long.toString(nrOfIRIs, Character.MAX_RADIX);
             } else {
                 return null;
             }
+        } else {
+            return template;
         }
     }
 
@@ -362,7 +386,7 @@ public class IDLabFunctions {
      * @return  The same property-value template sorted according to property name.
      */
     static String sortWatchedProperties(final String watchedValueTemplate) {
-        String[] propertyAndValues = watchedValueTemplate.split("&");   // TODO: in theory rr:tamplates are more complex than this...
+        String[] propertyAndValues = watchedValueTemplate.split("&");   // TODO: in theory rr:templates are more complex than this...
         Arrays.sort(propertyAndValues);
         return String.join("&", propertyAndValues);
     }
