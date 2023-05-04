@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2023-05-04
+
+### Fixed
+- Generate truly unique IRIs, even if the template is the same (fixes internal GitLab [issue #9](https://gitlab.ilabt.imec.be/KNoWS/fno/lib/idlab-functions-java/-/issues/9) )
+
+### Added
+- A method `MapState.putAndReturnIndex()` which returns the number of associated values with a given key.
+
 ## [0.3.0] - 2023-04-24
 
 ### Changed
@@ -64,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code extracted from [RMLMapper](https://github.com/RMLio/rmlmapper-java)
 
+[0.3.1]: https://github.com/FnOio/idlab-functions-java/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/FnOio/idlab-functions-java/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/FnOio/idlab-functions-java/compare/v0.1.4...v0.1.5
