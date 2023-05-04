@@ -4,8 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>Copyright 2022 IDLab (Ghent University - imec)</p>
@@ -14,7 +13,7 @@ import java.util.Map;
  */
 public class SimpleInMemoryMapState implements MapState {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
-    private final static Map<String, Map<String, String>> stateFileToMap = new HashMap<>();
+    private final static Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
 
     /**
      * Loads or creates a new state map for the given state file path.
@@ -35,20 +34,62 @@ public class SimpleInMemoryMapState implements MapState {
      */
     @Override
     public synchronized String put(final String stateFilePath, final String key, final String value) {
-        Map<String, String> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
+        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
-            Map<String, String> newMap = new HashMap<>();
+            Map<String, List<String>> newMap = new HashMap<>();
             if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
                 try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, String>)in.readObject();
+                    newMap = (Map<String, List<String>>)in.readObject();
                 } catch (IOException | ClassNotFoundException e) {
                     log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
                 }
             }
             return newMap;
         });
-        return map.put(key, value);
+        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>());
+        if (values.isEmpty()) {
+            values.add(value);
+            return null;
+        } else {
+            // TODO: return laatste, en voeg niet toe als al in zit. Voorzie ook functie die index van value teruggeeft
+            if (values.contains(value)) {
+                return values.get(values.size() - 1);
+            } else {
+                String returnValue = values.get(values.size() - 1);
+                values.add(value);
+                return returnValue;
+            }
+        }
+    }
+
+    @Override
+    public synchronized Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
+        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
+            // first check if file exists and try to load map
+            File stateFile = new File(stateFilePath);
+            Map<String, List<String>> newMap = new HashMap<>();
+            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
+                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
+                    newMap = (Map<String, List<String>>)in.readObject();
+                } catch (IOException | ClassNotFoundException e) {
+                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
+                }
+            }
+            return newMap;
+        });
+        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
+        if (values.isEmpty()) {
+            values.add(value);
+            return Optional.of(0);
+        } else {
+            if (values.contains(value)) {
+                return Optional.empty();
+            } else {
+                values.add(value);
+                return Optional.of(values.size() - 1);
+            }
+        }
     }
 
     /**
@@ -82,9 +123,15 @@ public class SimpleInMemoryMapState implements MapState {
     }
 
     @Override
-    public synchronized long count(final String stateFilePath) {
+    public synchronized long count(final String stateFilePath, final String key) {
         if (stateFileToMap.containsKey(stateFilePath)) {
-            return stateFileToMap.get(stateFilePath).size();
+            Map<String, List<String>> map = stateFileToMap.get(stateFilePath);
+            List<String> values = map.get(key);
+            if (values == null) {
+                return 0;
+            } else {
+                return values.size();
+            }
         } else {
             return 0;
         }

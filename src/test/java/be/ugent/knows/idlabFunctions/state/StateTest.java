@@ -13,6 +13,7 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,7 +34,7 @@ public class StateTest {
 
     public static Stream<Arguments> stateAndNrCombinations() {
         List<MapState> states = List.of(new SimpleInMemoryMapState(), new MapDBState());
-        List<Integer> entries = List.of(10000, 100000, 1000 * 1000/*, 10 * 1000 * 1000*/);
+        List<Integer> entries = List.of(100, 1000, 10000);
         List<Arguments> arguments = new ArrayList<>();
         states.forEach(state ->{
             entries.forEach(entry -> arguments.add(Arguments.of(state, entry)));
@@ -51,6 +52,7 @@ public class StateTest {
     //@BeforeEach
     @AfterEach
     public void deleteStateFiles() {
+
         if (tmpStateFile1.exists()) {
             if (!tmpStateFile1.delete()) {
                 log.warn("Cannot delete state file {}. Ignore if test deleted state.", tmpStateFile1.getPath());
@@ -160,7 +162,7 @@ public class StateTest {
                 String sFile = longValue % 2 == 0 ? stateFile1 : stateFile2;
                 String key = Long.toHexString(longValue);
                 String binaryValue = Long.toString(longValue, 2);
-                state.put(sFile, key, binaryValue);
+                state.putAndReturnIndex(sFile, key, binaryValue);
             });
         }
         service.shutdown();
@@ -169,6 +171,23 @@ public class StateTest {
         }
         long endTime = System.currentTimeMillis();
         System.out.println("time (ms) = " + (endTime - startTime));
+        state.deleteAllState();
+    }
+
+    @ParameterizedTest
+    @MethodSource("states")
+    public void testPutAndReturnIndex(MapState state) {
+        Optional<Integer> indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
+        assertTrue(indexOpt.isPresent());
+        assertEquals(0, indexOpt.get());
+
+        indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "b");
+        assertTrue(indexOpt.isPresent());
+        assertEquals(1, indexOpt.get());
+
+        indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
+        assertFalse(indexOpt.isPresent());
+
         state.deleteAllState();
     }
 

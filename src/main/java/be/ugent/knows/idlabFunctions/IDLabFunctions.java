@@ -366,14 +366,11 @@ public class IDLabFunctions {
             } else {
                 actualStateDirPathStr = stateDirPathStr;
             }
-            String newWatchedPropertyString = sortWatchedProperties(watchedValueTemplate);
-            String oldWatchedPropertyString = UNIQUE_IRI_STATE.put(actualStateDirPathStr, template, newWatchedPropertyString);
-            if (oldWatchedPropertyString == null || !oldWatchedPropertyString.equals(newWatchedPropertyString)) {
-                long nrOfIRIs = UNIQUE_IRI_STATE.count(actualStateDirPathStr);
-                return template + '#' + Long.toString(nrOfIRIs, Character.MAX_RADIX);
-            } else {
-                return null;
-            }
+            final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+            Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, template, watchedPropertyString);
+            return indexOpt
+                    .map(integer -> template + '#' + Long.toString(integer, Character.MAX_RADIX))
+                    .orElse(null);
         } else {
             return template;
         }

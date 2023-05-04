@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -43,6 +44,12 @@ public class MapDBState implements MapState {
     }
 
     @Override
+    public Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
+        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+        return container.putAndReturnIndex(key, value);
+    }
+
+    @Override
     public void deleteAllState() {
         synchronized (stateFileToMap) {
             stateFileToMap.forEach((stateFilePath, mapContainer) -> {
@@ -62,10 +69,10 @@ public class MapDBState implements MapState {
     }
 
     @Override
-    public long count(final String stateFilePath) {
+    public long count(final String stateFilePath, final String key) {
         synchronized (stateFileToMap) {
             if (stateFileToMap.containsKey(stateFilePath)) {
-                return stateFileToMap.get(stateFilePath).count();
+                return stateFileToMap.get(stateFilePath).count(key);
             } else {
                 return 0;
             }
