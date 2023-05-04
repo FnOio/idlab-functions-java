@@ -1,13 +1,11 @@
 package be.ugent.knows.idlabFunctions.state;
 
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
-import org.mapdb.Serializer;
+import org.mapdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,8 +19,6 @@ import java.util.concurrent.TimeUnit;
 public class MapDBContainer {
     private final static Logger logger = LoggerFactory.getLogger(MapDBContainer.class);
     private final DB mapDB;
-    private final HTreeMap<String, String> map;
-
     private final ScheduledExecutorService committer;
 
     /**
@@ -36,7 +32,7 @@ public class MapDBContainer {
         if (dbFilePath != null) {
             File dbPArentFile = new File(dbFilePath).getParentFile();
             if (!dbPArentFile.exists() && !dbPArentFile.mkdirs()) {
-                logger.warn(dbPArentFile + " doesn not exist and could not be created, creating a temporary file state.");
+                logger.warn(dbPArentFile + " does not exist and could not be created, creating a temporary file state.");
                 dbMaker = DBMaker.tempFileDB();
             } else {
                 dbMaker = DBMaker.fileDB(dbFilePath);
@@ -50,8 +46,6 @@ public class MapDBContainer {
                 .closeOnJvmShutdown()
                 .make();
 
-        map = mapDB.hashMap("map", Serializer.STRING, Serializer.STRING).createOrOpen();
-
         // make an executor service that does a commit on the mapDB every 10 seconds
         committer = Executors.newSingleThreadScheduledExecutor();
         committer.scheduleAtFixedRate(mapDB::commit, 10, 10, TimeUnit.SECONDS);
@@ -59,16 +53,48 @@ public class MapDBContainer {
         addShutDownHook();
     }
     public String put(String key, String value) {
-        return map.put(key, value);
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+        if (values.isEmpty()) {
+            values.add(value);
+            return null;
+        } else {
+            if (values.contains(value)) {
+                return values.get(values.size() - 1);
+            } else {
+                String returnValue = values.get(values.size() - 1);
+                values.add(value);
+                return returnValue;
+            }
+        }
     }
 
-    public long count() {
-        return map.sizeLong();
+    public Optional<Integer> putAndReturnIndex(String key, String value) {
+        Set<String> values = mapDB.hashSet(key, Serializer.STRING).createOrOpen();
+        if (values.isEmpty()) {
+            values.add(value);
+            return Optional.of(0);
+        } else {
+            if (values.contains(value)) {
+                return Optional.empty();
+            } else {
+                values.add(value);
+                return Optional.of(values.size() - 1);
+            }
+        }
+    }
+
+    public long count(String key) {
+        Object valuesObject = mapDB.get(key);
+        if (valuesObject == null) {
+            return 0;
+        } else {
+            List<String> values = Collections.unmodifiableList((List<String>) valuesObject);
+            return values.size();
+        }
     }
 
     public void close() {
         committer.shutdown();
-        map.close();
         mapDB.close();
     }
 
@@ -83,4 +109,5 @@ public class MapDBContainer {
             close();
         }));
     }
+
 }

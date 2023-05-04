@@ -256,6 +256,18 @@ public class IDLabFunctionsTest {
         }
 
         @Test
+        public void generateSecondUniqueIRI() {
+            String template = "http://example.com/sensor2/";
+
+            final String generated_iri_1 = IDLabFunctions.generateUniqueIRI(template, "a=1", false, STATE_FILE);
+            final String generated_iri_2 = IDLabFunctions.generateUniqueIRI(template, "a=2", false, STATE_FILE);
+            assertNotEquals(generated_iri_1, generated_iri_2);
+
+            final String generated_iri_3 = IDLabFunctions.generateUniqueIRI(template, "a=1", false, STATE_FILE);
+            assertNull(generated_iri_3);
+        }
+
+        @Test
         public void generateUniqueIRIWithDate() {
 
             String template = "http://example.com/sensor2/";
