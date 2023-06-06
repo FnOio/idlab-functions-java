@@ -332,17 +332,17 @@ public class IDLabFunctions {
      * A unique IRI will be generated from the provided "template" string by appending the current
      * date timestamp.
      *
-     * @param template             The template string used to generate unique IRI. If it is guaranteed to be unique
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
      *                             {@code true}, this function returns the value of the {@code template} parameters.
      *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
      *                             same value as the previous call then there's no update and this function returns {@code null}.
      *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
      *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -356,7 +356,7 @@ public class IDLabFunctions {
      * @return A unique IRI will be generated from the provided "template" string by appending a unique string
      * if possible. Otherwise, null is returned.
      */
-    public static String generateUniqueIRI(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+    public static String generateUniqueIRI(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         if (isUnique == null || !isUnique) {
             final String actualStateDirPathStr;
             if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
@@ -367,13 +367,13 @@ public class IDLabFunctions {
                 actualStateDirPathStr = stateDirPathStr;
             }
             final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
-            Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, template, watchedPropertyString);
+            Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
             return indexOpt
-                    .map(integer -> template + '#' + Long.toString(integer, Character.MAX_RADIX))
+                    .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
                     .orElse(null);
-        } else {
-            return template;
         }
+
+        return iri;
     }
 
     /**

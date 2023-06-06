@@ -233,59 +233,64 @@ public class IDLabFunctionsTest {
 
         @Test
         public void skipGenerateUniqueIRI() {
-            String template = "http://example.com/sensor1/";
+            String iri = "http://example.com/sensor1/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNotNull(firstUniqueIRI);
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNull(generated_iri);
         }
 
 
         @Test
         public void generateUniqueIRI() {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = null;
             boolean isUnique = true;
 
+<<<<<<< HEAD
             String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
             assertEquals(template, generated_iri);
 
+=======
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
+            assertEquals(iri, generated_iri);
+>>>>>>> 903e666 (fixup! IDLabFunctions: rename 'template' to 'iri')
         }
 
         @Test
         public void generateSecondUniqueIRI() {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
 
-            final String generated_iri_1 = IDLabFunctions.generateUniqueIRI(template, "a=1", false, STATE_FILE);
-            final String generated_iri_2 = IDLabFunctions.generateUniqueIRI(template, "a=2", false, STATE_FILE);
+            final String generated_iri_1 = IDLabFunctions.generateUniqueIRI(iri, "a=1", false, STATE_FILE);
+            final String generated_iri_2 = IDLabFunctions.generateUniqueIRI(iri, "a=2", false, STATE_FILE);
             assertNotEquals(generated_iri_1, generated_iri_2);
 
-            final String generated_iri_3 = IDLabFunctions.generateUniqueIRI(template, "a=1", false, STATE_FILE);
+            final String generated_iri_3 = IDLabFunctions.generateUniqueIRI(iri, "a=1", false, STATE_FILE);
             assertNull(generated_iri_3);
         }
 
         @Test
         public void generateUniqueIRIWithDate() {
 
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
-            assertTrue(generated_iri.contains(template));
+            assertTrue(generated_iri.contains(iri));
         }
 
         @Test
         public void testSaveState() {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
 
             IDLabFunctions.saveState();
@@ -295,11 +300,11 @@ public class IDLabFunctionsTest {
 
         @Test
         public void testDefaultStateFile() throws IOException {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, null);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, null);
             assertNotNull(generated_iri);
 
             // check state dir
@@ -315,11 +320,11 @@ public class IDLabFunctionsTest {
 
         @Test
         public void testTmpStateFile() throws IOException {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, "__tmp");
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, "__tmp");
             assertNotNull(generated_iri);
 
             // check state dir
@@ -335,11 +340,11 @@ public class IDLabFunctionsTest {
 
         @Test
         public void testWorkingDirState() throws IOException {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, "__working_dir");
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, "__working_dir");
             assertNotNull(generated_iri);
 
             // check state dir
