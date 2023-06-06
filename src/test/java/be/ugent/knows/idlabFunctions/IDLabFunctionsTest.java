@@ -250,14 +250,8 @@ public class IDLabFunctionsTest {
             String value = null;
             boolean isUnique = true;
 
-<<<<<<< HEAD
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
-            assertEquals(template, generated_iri);
-
-=======
             String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertEquals(iri, generated_iri);
->>>>>>> 903e666 (fixup! IDLabFunctions: rename 'template' to 'iri')
         }
 
         @Test
@@ -280,6 +274,17 @@ public class IDLabFunctionsTest {
             boolean isUnique = false;
 
             String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
+        public void implicitCreate() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
         }

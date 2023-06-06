@@ -159,6 +159,14 @@ idlab-fn:generateUniqueIRI
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:implicitCreate
+    a                   fno:Function ;
+    fno:name            "implicitCreate" ;
+    rdfs:label          "implicitCreate" ;
+    dcterms:description "Generates a unique IRI by when an entity is implicitely created" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
 idlab-fn:toUpperCaseURL
     a                   fno:Function ;
     fno:name            "toUpperCaseURL" ;
@@ -518,6 +526,12 @@ idlab-fn-m:generateUniqueIRIMapping
     fno:function		idlab-fn:generateUniqueIRI;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "generateUniqueIRI" ] .
+
+idlab-fn-m:implicitCreateMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:implicitCreate;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitCreate" ] .
 
 idlab-fn-m:toUpperCaseURLMapping
 	a                   fno:Mapping ;

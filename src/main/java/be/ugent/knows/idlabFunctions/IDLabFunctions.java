@@ -377,6 +377,53 @@ public class IDLabFunctions {
     }
 
     /**
+     * Detect implicit created members by checking if their IRI exists in the state or not.
+     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
+     *                             {@code true}, this function returns the value of the {@code template} parameters.
+     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
+     *                             same value as the previous call then there's no update and this function returns {@code null}.
+     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
+     *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             </ul>
+     * @return A unique IRI will be generated from the provided IRI by appending a unique string
+     * if possible. Otherwise, null is returned.
+     */
+    public static String implicitCreate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+        if (isUnique == null || !isUnique) {
+            final String actualStateDirPathStr;
+            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
+                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state").getPath();
+            } else if (stateDirPathStr.equals("__working_dir")) {
+                actualStateDirPathStr = new File(System.getProperty("user.dir"), "unique_iri_state").getPath();
+            } else {
+                actualStateDirPathStr = stateDirPathStr;
+            }
+
+            /* IRI in state, cannot be added anymore */
+            if (UNIQUE_IRI_STATE.hasKey(actualStateDirPathStr, iri))
+                return null;
+        }
+
+        return IDLabFunctions.generateUniqueIRI(iri, watchedValueTemplate, isUnique, stateDirPathStr);
+    }
+
+    /**
      * Sorts the properties from a given resolved rr:template by property name. E.g.: if the template is
      * {@code b=1&a=3} the the result will be {@code a=3&b=1}
      * @param watchedValueTemplate  Property-value template to sort
