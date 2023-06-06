@@ -38,6 +38,8 @@ public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
     private final static MapState UNIQUE_IRI_STATE = new MapDBState();
+    private final static MapState DELETE_STATE = new MapDBState();
+    private final static String MAGIC_MARKER = "!@#$%^&*()_+";
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
@@ -309,15 +311,18 @@ public class IDLabFunctions {
 
     public static void saveState() {
         UNIQUE_IRI_STATE.saveAllState();
+        DELETE_STATE.saveAllState();
     }
 
     public static void resetState() {
         UNIQUE_IRI_STATE.deleteAllState();
+        DELETE_STATE.deleteAllState();
     }
 
     public static void close() {
         try {
             UNIQUE_IRI_STATE.close();
+            DELETE_STATE.close();
         } catch (Exception e) {
             logger.warn("Cannot close state.", e);
         }
@@ -469,6 +474,70 @@ public class IDLabFunctions {
         }
 
         return IDLabFunctions.generateUniqueIRI(iri, watchedValueTemplate, isUnique, stateDirPathStr);
+    }
+
+
+    /**
+     * Detect implicit deleted members by checking if their IRI is not present anymore in the current version.
+     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
+     *                             {@code true}, this function returns the value of the {@code template} parameters.
+     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
+     *                             same value as the previous call then there's no update and this function returns {@code null}.
+     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
+     *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             </ul>
+     * @return A unique IRI will be generated from the provided IRI by appending a unique string
+     * if possible. Otherwise, null is returned.
+     */
+    public static List<String> implicitDelete(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+        List<String> iris = new ArrayList<>();
+        final String SEEN_ID = "SEEN";
+
+        if (isUnique == null || !isUnique) {
+            final String actualStateDirPathStr;
+            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
+                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "delete_state").getPath();
+            } else if (stateDirPathStr.equals("__working_dir")) {
+                actualStateDirPathStr = new File(System.getProperty("user.dir"), "delete_state").getPath();
+            } else {
+                actualStateDirPathStr = stateDirPathStr;
+            }
+
+            /* Process deletions when marker found */
+            if (iri.startsWith(MAGIC_MARKER)) {
+                for (Map.Entry<String, List<String>> entry : DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
+                    if (!entry.getValue().get(0).equals(SEEN_ID))
+                        iris.add(entry.getKey());
+                }
+                return iris;
+            /* Mark IRI as seen */
+            } else {
+                List<String> value = new ArrayList<>();
+                value.add(SEEN_ID);
+                DELETE_STATE.replace(actualStateDirPathStr, iri, value);
+                return null;
+            }
+        }
+
+        /* Pass through when unique */
+        iris.add(iri);
+        return iris;
     }
 
     /**

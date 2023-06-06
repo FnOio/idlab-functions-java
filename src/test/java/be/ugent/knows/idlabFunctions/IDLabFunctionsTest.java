@@ -1,5 +1,7 @@
 package be.ugent.knows.idlabFunctions;
 
+import be.ugent.knows.idlabFunctions.state.MapDBState;
+import be.ugent.knows.idlabFunctions.state.MapState;
 import com.opencsv.exceptions.CsvValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -224,6 +226,7 @@ public class IDLabFunctionsTest {
     public static class LDESGenerationTests {
 
         private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState1").getPath();
+        private static final String DELETE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState2").getPath();
 
 
         @AfterEach
@@ -301,6 +304,32 @@ public class IDLabFunctionsTest {
             String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
+        public void implicitDelete() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+            final String MAGIC_MARKER = "!@#$%^&*()_+";
+            List <String> generated_iris;
+            final MapState DELETE_STATE = new MapDBState();
+            final String UNSEEN_ID = "UNSEEN";
+
+            /* Add 2 members to state, both unseen */
+            DELETE_STATE.put(DELETE_FILE, iri, UNSEEN_ID);
+            iri = "http://example.com/sensor1/";
+            value = "pressure=6";
+            DELETE_STATE.put(DELETE_FILE, iri, UNSEEN_ID);
+
+            /* Mark 1 member as seen */
+            generated_iris = IDLabFunctions.implicitDelete(iri, value, isUnique, DELETE_FILE);
+            assertNull(generated_iris);
+
+            /* Process all deletions, 1 is unseen thus deleted */
+            generated_iris = IDLabFunctions.implicitDelete(MAGIC_MARKER, value, isUnique, DELETE_FILE);
+            assertNotNull(generated_iris);
+            assertTrue(generated_iris.size() == 1);
         }
 
         @Test

@@ -175,6 +175,14 @@ idlab-fn:implicitUpdate
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:implicitDelete
+    a                   fno:Function ;
+    fno:name            "implicitDelete" ;
+    rdfs:label          "implicitDelete" ;
+    dcterms:description "Generates a unique IRI by when an entity is implicitely deleted" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_listOut ) .
+
 idlab-fn:toUpperCaseURL
     a                   fno:Function ;
     fno:name            "toUpperCaseURL" ;
@@ -546,6 +554,12 @@ idlab-fn-m:implicitUpdateMapping
     fno:function		idlab-fn:implicitUpdate;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitUpdate" ] .
+
+idlab-fn-m:implicitDeleteMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:implicitDelete;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitDelete" ] .
 
 idlab-fn-m:toUpperCaseURLMapping
 	a                   fno:Mapping ;
