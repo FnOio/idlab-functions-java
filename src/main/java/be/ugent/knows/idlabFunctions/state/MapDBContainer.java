@@ -83,6 +83,15 @@ public class MapDBContainer {
         }
     }
 
+    public boolean hasKey(String key) {
+        Set<String> values = mapDB.hashSet(key, Serializer.STRING).createOrOpen();
+
+        if (values.isEmpty())
+            return false;
+
+        return true;
+    }
+
     public long count(String key) {
         Object valuesObject = mapDB.get(key);
         if (valuesObject == null) {

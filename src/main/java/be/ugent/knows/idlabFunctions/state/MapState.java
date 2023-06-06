@@ -47,6 +47,14 @@ public interface MapState extends AutoCloseable {
     Optional<Integer> putAndReturnIndex(final String stateFilePath, final String key, final String value);
 
     /**
+     * Checks if an key exists or not.
+     * @param stateFilePath The path of this state map's persistence file.
+     * @param key           The key with which the specified value is to be associated.
+     * @return              True if the pair exists, otherwise false.
+     */
+    boolean hasKey(String stateFilePath, String key);
+
+    /**
      * Deletes all state: removes state files and clears the state in memory.
      */
     void deleteAllState();

@@ -92,6 +92,30 @@ public class SimpleInMemoryMapState implements MapState {
         }
     }
 
+    @Override
+    public boolean hasKey(String stateFilePath, String key) {
+        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
+            // first check if file exists and try to load map
+            File stateFile = new File(stateFilePath);
+            Map<String, List<String>> newMap = new HashMap<>();
+            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
+                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
+                    newMap = (Map<String, List<String>>)in.readObject();
+                } catch (IOException | ClassNotFoundException e) {
+                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
+                }
+            }
+            return newMap;
+        });
+
+        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
+
+        if (values.isEmpty())
+            return false;
+
+        return true;
+    }
+
     /**
      * Closes the state: state is persisted to disk before clearing the state in memory.
      */
