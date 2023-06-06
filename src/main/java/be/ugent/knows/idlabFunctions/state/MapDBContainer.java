@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * A record holding a MapDB instance and the corresponding map.
@@ -92,6 +93,15 @@ public class MapDBContainer {
         return true;
     }
 
+    public Map<String, List<String>> getEntries() {
+        Map <String, List<String>> entries = new HashMap<>();
+        for (String key: mapDB.getAllNames()) {
+            IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+            entries.put(key, values);
+        }
+        return entries;
+    }
+
     public long count(String key) {
         Object valuesObject = mapDB.get(key);
         if (valuesObject == null) {
@@ -118,5 +128,4 @@ public class MapDBContainer {
             close();
         }));
     }
-
 }

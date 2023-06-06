@@ -56,6 +56,12 @@ public class MapDBState implements MapState {
     }
 
     @Override
+    public Map<String, List<String>> getEntries(String stateFilePath) {
+        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+        return container.getEntries();
+    }
+
+    @Override
     public void deleteAllState() {
         synchronized (stateFileToMap) {
             stateFileToMap.forEach((stateFilePath, mapContainer) -> {

@@ -1,5 +1,6 @@
 package be.ugent.knows.idlabFunctions.state;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -53,6 +54,13 @@ public interface MapState extends AutoCloseable {
      * @return              True if the pair exists, otherwise false.
      */
     boolean hasKey(String stateFilePath, String key);
+
+    /**
+     * Return all entries in state.
+     * @param stateFilePath The path of this state map's persistence file.
+     * @return              All entries.
+     */
+    Map<String, List<String>> getEntries(String stateFilePath);
 
     /**
      * Deletes all state: removes state files and clears the state in memory.

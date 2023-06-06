@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * <p>Copyright 2022 IDLab (Ghent University - imec)</p>
@@ -105,6 +106,7 @@ public class SimpleInMemoryMapState implements MapState {
                     log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
                 }
             }
+
             return newMap;
         });
 
@@ -114,6 +116,26 @@ public class SimpleInMemoryMapState implements MapState {
             return false;
 
         return true;
+    }
+
+    @Override
+    public Map<String, List<String>> getEntries(String stateFilePath) {
+        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
+            // first check if file exists and try to load map
+            File stateFile = new File(stateFilePath);
+            Map<String, List<String>> newMap = new HashMap<>();
+            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
+                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
+                    newMap = (Map<String, List<String>>)in.readObject();
+                } catch (IOException | ClassNotFoundException e) {
+                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
+                }
+            }
+
+            return newMap;
+        });
+
+        return map;
     }
 
     /**
