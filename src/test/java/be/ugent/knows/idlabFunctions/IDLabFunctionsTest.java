@@ -290,6 +290,20 @@ public class IDLabFunctionsTest {
         }
 
         @Test
+        public void implicitUpdate() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+
+            value = "pressure=6";
+            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
         public void testSaveState() {
             String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
