@@ -1,5 +1,6 @@
 package be.ugent.knows.idlabFunctions.state;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,6 +47,15 @@ public interface MapState extends AutoCloseable {
      *                      else an Optional with the number of elements - 1 as value (i.e., the index)
      */
     Optional<Integer> putAndReturnIndex(final String stateFilePath, final String key, final String value);
+
+    /**
+     * Replaces the values of a key.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @param stateFilePath The path of this state map's persistence file.
+     */
+    void replace(final String stateFilePath, final String key, final List<String> value);
 
     /**
      * Checks if an key exists or not.

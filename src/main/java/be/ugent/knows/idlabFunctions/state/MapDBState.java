@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +48,12 @@ public class MapDBState implements MapState {
     public Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
         MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
         return container.putAndReturnIndex(key, value);
+    }
+
+    @Override
+    public void replace(String stateFilePath, String key, List<String> value) {
+        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+        container.replace(key, value);
     }
 
     @Override

@@ -112,6 +112,12 @@ public class MapDBContainer {
         }
     }
 
+    public void replace(String key, List<String> value) {
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+        values.clear();
+        values.addAll(value);
+    }
+
     public void close() {
         committer.shutdown();
         mapDB.close();
