@@ -46,6 +46,26 @@ public class IDLabFunctions {
     private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<String, List<String[]>> CACHE = new HashMap<>();
 
+    /**
+     * Resolve the state dir path. If not supplied, a path is constructed from a temporary directory.
+     * The working directory can be used if the path equals to __working_dir or a temporary directory if the path
+     * equals to __tmp. If a specific path is provided, it is just returned
+     * @param stateDirPathStr
+     * @return the resolved state dir path
+     */
+    private static String resolveStateDirPath(String stateDirPathStr, String state_file) {
+        final String actualStateDirPathStr;
+        if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
+            actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), state_file).getPath();
+        } else if (stateDirPathStr.equals("__working_dir")) {
+            actualStateDirPathStr = new File(System.getProperty("user.dir"), state_file).getPath();
+        } else {
+            actualStateDirPathStr = stateDirPathStr;
+        }
+
+        return actualStateDirPathStr;
+    }
+
     public static Map<SearchParameters, String> getMultipleLookupStateSet(){
         return Cache.getMultipleLookupStateMap();
     }
@@ -363,14 +383,7 @@ public class IDLabFunctions {
      */
     public static String generateUniqueIRI(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr;
-            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
-                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state").getPath();
-            } else if (stateDirPathStr.equals("__working_dir")) {
-                actualStateDirPathStr = new File(System.getProperty("user.dir"), "unique_iri_state").getPath();
-            } else {
-                actualStateDirPathStr = stateDirPathStr;
-            }
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
             final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
             Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
             return indexOpt
@@ -411,14 +424,7 @@ public class IDLabFunctions {
      */
     public static String implicitCreate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr;
-            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
-                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state").getPath();
-            } else if (stateDirPathStr.equals("__working_dir")) {
-                actualStateDirPathStr = new File(System.getProperty("user.dir"), "unique_iri_state").getPath();
-            } else {
-                actualStateDirPathStr = stateDirPathStr;
-            }
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
 
             /* IRI in state, cannot be added anymore */
             if (UNIQUE_IRI_STATE.hasKey(actualStateDirPathStr, iri))
@@ -459,14 +465,7 @@ public class IDLabFunctions {
      */
     public static String implicitUpdate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr;
-            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
-                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state").getPath();
-            } else if (stateDirPathStr.equals("__working_dir")) {
-                actualStateDirPathStr = new File(System.getProperty("user.dir"), "unique_iri_state").getPath();
-            } else {
-                actualStateDirPathStr = stateDirPathStr;
-            }
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
 
             /* IRI not in state, cannot be modified yet */
             if (!UNIQUE_IRI_STATE.hasKey(actualStateDirPathStr, iri))
@@ -510,14 +509,7 @@ public class IDLabFunctions {
         final String SEEN_ID = "SEEN";
 
         if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr;
-            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
-                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "delete_state").getPath();
-            } else if (stateDirPathStr.equals("__working_dir")) {
-                actualStateDirPathStr = new File(System.getProperty("user.dir"), "delete_state").getPath();
-            } else {
-                actualStateDirPathStr = stateDirPathStr;
-            }
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "delete_state");
 
             /* Process deletions when marker found */
             if (iri.startsWith(MAGIC_MARKER)) {
