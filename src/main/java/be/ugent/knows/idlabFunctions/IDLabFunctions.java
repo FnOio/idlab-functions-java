@@ -41,8 +41,8 @@ public class IDLabFunctions {
     private final static MapState UPDATE_STATE = new MapDBState();
     private final static MapState DELETE_STATE = new MapDBState();
     private final static MapState UNIQUE_IRI_STATE = new MapDBState();
-    private final static String MAGIC_MARKER = "!@#$%^&*()_+";
-    private final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26*%28%29_%2B";
+    public final static String MAGIC_MARKER = "!@#$%^&*()_+";
+    public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26*%28%29_%2B";
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
