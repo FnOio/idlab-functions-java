@@ -111,6 +111,14 @@ public class MapDBState implements MapState {
     }
 
     @Override
+    public void remove(String stateFilePath, final String key) {
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            container.remove(key);
+        }
+    }
+
+    @Override
     public void close() {
         synchronized (stateFileToMap) {
             stateFileToMap.forEach((stateFilePath, mapContainer) -> mapContainer.close());

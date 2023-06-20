@@ -70,7 +70,7 @@ public class MapDBContainer {
     }
 
     public Optional<Integer> putAndReturnIndex(String key, String value) {
-        Set<String> values = mapDB.hashSet(key, Serializer.STRING).createOrOpen();
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen(); //mapDB.hashSet(key, Serializer.STRING).createOrOpen();
         if (values.isEmpty()) {
             values.add(value);
             return Optional.of(0);
@@ -85,7 +85,7 @@ public class MapDBContainer {
     }
 
     public boolean hasKey(String key) {
-        Set<String> values = mapDB.hashSet(key, Serializer.STRING).createOrOpen();
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen(); //mapDB.hashSet(key, Serializer.STRING).createOrOpen();
 
         if (values.isEmpty())
             return false;
@@ -133,5 +133,10 @@ public class MapDBContainer {
             logger.debug("Running shutdown hook; closing mapdb");
             close();
         }));
+    }
+
+    public void remove(String key) {
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+        values.clear();
     }
 }

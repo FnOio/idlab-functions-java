@@ -89,4 +89,11 @@ public interface MapState extends AutoCloseable {
      * @return              The number of entries in the state.
      */
     long count(final String stateFilePath, final String key);
+
+    /**
+     * Remove a key from the state
+     * @param stateFilePath The path of this state map's persistence file.
+     * @param key           The key to count the values for.
+     */
+    void remove(String stateFilePath, String key);
 }
