@@ -40,32 +40,42 @@ public class MapDBState implements MapState {
      */
     @Override
     public String put(String stateFilePath, String key, String value) {
-        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
-        return container.put(key, value);
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            return container.put(key, value);
+        }
     }
 
     @Override
     public Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
-        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
-        return container.putAndReturnIndex(key, value);
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            return container.putAndReturnIndex(key, value);
+        }
     }
 
     @Override
     public void replace(String stateFilePath, String key, List<String> value) {
-        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
-        container.replace(key, value);
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            container.replace(key, value);
+        }
     }
 
     @Override
     public boolean hasKey(String stateFilePath, String key) {
-        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
-        return container.hasKey(key);
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            return container.hasKey(key);
+        }
     }
 
     @Override
     public Map<String, List<String>> getEntries(String stateFilePath) {
-        MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
-        return container.getEntries();
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            return container.getEntries();
+        }
     }
 
     @Override
@@ -84,7 +94,9 @@ public class MapDBState implements MapState {
 
     @Override
     public void saveAllState() {
-        stateFileToMap.forEach((stateFilePath, mapContainer) -> mapContainer.commit());
+        synchronized (stateFileToMap) {
+            stateFileToMap.forEach((stateFilePath, mapContainer) -> mapContainer.commit());
+        }
     }
 
     @Override
