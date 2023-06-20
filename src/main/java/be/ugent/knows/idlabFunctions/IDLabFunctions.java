@@ -37,9 +37,12 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private final static MapState UNIQUE_IRI_STATE = new MapDBState();
+    private final static MapState CREATE_STATE = new MapDBState();
+    private final static MapState UPDATE_STATE = new MapDBState();
     private final static MapState DELETE_STATE = new MapDBState();
+    private final static MapState UNIQUE_IRI_STATE = new MapDBState();
     private final static String MAGIC_MARKER = "!@#$%^&*()_+";
+    private final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26*%28%29_%2B";
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
@@ -330,19 +333,25 @@ public class IDLabFunctions {
     }
 
     public static void saveState() {
-        UNIQUE_IRI_STATE.saveAllState();
+        CREATE_STATE.saveAllState();
+        UPDATE_STATE.saveAllState();
         DELETE_STATE.saveAllState();
+        UNIQUE_IRI_STATE.saveAllState();
     }
 
     public static void resetState() {
-        UNIQUE_IRI_STATE.deleteAllState();
+        CREATE_STATE.deleteAllState();
+        UPDATE_STATE.deleteAllState();
         DELETE_STATE.deleteAllState();
+        UNIQUE_IRI_STATE.deleteAllState();
     }
 
     public static void close() {
         try {
-            UNIQUE_IRI_STATE.close();
+            CREATE_STATE.close();
+            UPDATE_STATE.close();
             DELETE_STATE.close();
+            UNIQUE_IRI_STATE.close();
         } catch (Exception e) {
             logger.warn("Cannot close state.", e);
         }
@@ -423,15 +432,20 @@ public class IDLabFunctions {
      * if possible. Otherwise, null is returned.
      */
     public static String implicitCreate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
-            /* IRI in state, cannot be added anymore */
-            if (UNIQUE_IRI_STATE.hasKey(actualStateDirPathStr, iri))
-                return null;
-        }
+        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+            return null;
 
-        return IDLabFunctions.generateUniqueIRI(iri, watchedValueTemplate, isUnique, stateDirPathStr);
+        /* IRI in state, cannot be added anymore */
+        if ((isUnique == null || !isUnique) && CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+            return null;
+
+        Optional<Integer> indexOpt = CREATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return indexOpt
+               .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
+               .orElse(null);
     }
 
     /**
@@ -464,15 +478,22 @@ public class IDLabFunctions {
      * if possible. Otherwise, null is returned.
      */
     public static String implicitUpdate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
-            /* IRI not in state, cannot be modified yet */
-            if (!UNIQUE_IRI_STATE.hasKey(actualStateDirPathStr, iri))
-                return null;
+        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+            return null;
+
+        /* IRI not in state, cannot be modified yet. Insert it */
+        if ((isUnique == null || !isUnique) && !UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
+            UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+            return null;
         }
 
-        return IDLabFunctions.generateUniqueIRI(iri, watchedValueTemplate, isUnique, stateDirPathStr);
+        Optional<Integer> indexOpt = UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return indexOpt
+               .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
+               .orElse(null);
     }
 
 
@@ -507,22 +528,33 @@ public class IDLabFunctions {
     public static List<String> implicitDelete(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         List<String> iris = new ArrayList<>();
         final String SEEN_ID = "SEEN";
+        final String NOT_SEEN_ID = "NOT-SEEN";
 
         if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "delete_state");
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
 
             /* Process deletions when marker found */
-            if (iri.startsWith(MAGIC_MARKER)) {
+            if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
                 for (Map.Entry<String, List<String>> entry : DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
-                    if (!entry.getValue().get(0).equals(SEEN_ID))
-                        iris.add(entry.getKey());
+                    if (!entry.getValue().get(0).equals(SEEN_ID)) {
+                        DELETE_STATE.remove(actualStateDirPathStr, entry.getKey());
+                        iris.add(IDLabFunctions.generateUniqueIRI(entry.getKey(), "", false, actualStateDirPathStr));
+                    } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
+                        List<String> value = new ArrayList<>();
+                        value.add(NOT_SEEN_ID);
+                        DELETE_STATE.replace(actualStateDirPathStr, entry.getKey(), value);
+                    }
                 }
-                return iris;
+
+                /* Return NULL when list is empty to avoid triggering any Triples Map */
+                return iris.isEmpty() ? null : iris;
             /* Mark IRI as seen */
             } else {
-                List<String> value = new ArrayList<>();
-                value.add(SEEN_ID);
-                DELETE_STATE.replace(actualStateDirPathStr, iri, value);
+                if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
+                    List<String> value = new ArrayList<>();
+                    value.add(SEEN_ID);
+                    DELETE_STATE.replace(actualStateDirPathStr, iri, value);
+                }
                 return null;
             }
         }
