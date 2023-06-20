@@ -159,6 +159,30 @@ idlab-fn:generateUniqueIRI
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:implicitCreate
+    a                   fno:Function ;
+    fno:name            "implicitCreate" ;
+    rdfs:label          "implicitCreate" ;
+    dcterms:description "Generates a unique IRI by when an entity is implicitely created" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
+idlab-fn:implicitUpdate
+    a                   fno:Function ;
+    fno:name            "implicitUpdate" ;
+    rdfs:label          "implicitUpdate" ;
+    dcterms:description "Generates a unique IRI by when an entity is implicitely updated" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
+idlab-fn:implicitDelete
+    a                   fno:Function ;
+    fno:name            "implicitDelete" ;
+    rdfs:label          "implicitDelete" ;
+    dcterms:description "Generates a unique IRI by when an entity is implicitely deleted" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_listOut ) .
+
 idlab-fn:toUpperCaseURL
     a                   fno:Function ;
     fno:name            "toUpperCaseURL" ;
@@ -518,6 +542,24 @@ idlab-fn-m:generateUniqueIRIMapping
     fno:function		idlab-fn:generateUniqueIRI;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "generateUniqueIRI" ] .
+
+idlab-fn-m:implicitCreateMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:implicitCreate;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitCreate" ] .
+
+idlab-fn-m:implicitUpdateMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:implicitUpdate;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitUpdate" ] .
+
+idlab-fn-m:implicitDeleteMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:implicitDelete;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitDelete" ] .
 
 idlab-fn-m:toUpperCaseURLMapping
 	a                   fno:Mapping ;

@@ -1,5 +1,7 @@
 package be.ugent.knows.idlabFunctions.state;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -47,6 +49,30 @@ public interface MapState extends AutoCloseable {
     Optional<Integer> putAndReturnIndex(final String stateFilePath, final String key, final String value);
 
     /**
+     * Replaces the values of a key.
+     *
+     * @param key key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @param stateFilePath The path of this state map's persistence file.
+     */
+    void replace(final String stateFilePath, final String key, final List<String> value);
+
+    /**
+     * Checks if an key exists or not.
+     * @param stateFilePath The path of this state map's persistence file.
+     * @param key           The key with which the specified value is to be associated.
+     * @return              True if the pair exists, otherwise false.
+     */
+    boolean hasKey(String stateFilePath, String key);
+
+    /**
+     * Return all entries in state.
+     * @param stateFilePath The path of this state map's persistence file.
+     * @return              All entries.
+     */
+    Map<String, List<String>> getEntries(String stateFilePath);
+
+    /**
      * Deletes all state: removes state files and clears the state in memory.
      */
     void deleteAllState();
@@ -63,4 +89,11 @@ public interface MapState extends AutoCloseable {
      * @return              The number of entries in the state.
      */
     long count(final String stateFilePath, final String key);
+
+    /**
+     * Remove a key from the state
+     * @param stateFilePath The path of this state map's persistence file.
+     * @param key           The key to count the values for.
+     */
+    void remove(String stateFilePath, String key);
 }

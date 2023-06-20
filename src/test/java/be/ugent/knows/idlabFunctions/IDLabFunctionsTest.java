@@ -1,5 +1,7 @@
 package be.ugent.knows.idlabFunctions;
 
+import be.ugent.knows.idlabFunctions.state.MapDBState;
+import be.ugent.knows.idlabFunctions.state.MapState;
 import com.opencsv.exceptions.CsvValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -224,6 +226,7 @@ public class IDLabFunctionsTest {
     public static class LDESGenerationTests {
 
         private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState1").getPath();
+        private static final String DELETE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState2").getPath();
 
 
         @AfterEach
@@ -233,59 +236,109 @@ public class IDLabFunctionsTest {
 
         @Test
         public void skipGenerateUniqueIRI() {
-            String template = "http://example.com/sensor1/";
+            String iri = "http://example.com/sensor1/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String firstUniqueIRI = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNotNull(firstUniqueIRI);
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNull(generated_iri);
         }
 
 
         @Test
         public void generateUniqueIRI() {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = null;
             boolean isUnique = true;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
-            assertEquals(template, generated_iri);
-
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
+            assertEquals(iri, generated_iri);
         }
 
         @Test
         public void generateSecondUniqueIRI() {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
 
-            final String generated_iri_1 = IDLabFunctions.generateUniqueIRI(template, "a=1", false, STATE_FILE);
-            final String generated_iri_2 = IDLabFunctions.generateUniqueIRI(template, "a=2", false, STATE_FILE);
+            final String generated_iri_1 = IDLabFunctions.generateUniqueIRI(iri, "a=1", false, STATE_FILE);
+            final String generated_iri_2 = IDLabFunctions.generateUniqueIRI(iri, "a=2", false, STATE_FILE);
             assertNotEquals(generated_iri_1, generated_iri_2);
 
-            final String generated_iri_3 = IDLabFunctions.generateUniqueIRI(template, "a=1", false, STATE_FILE);
+            final String generated_iri_3 = IDLabFunctions.generateUniqueIRI(iri, "a=1", false, STATE_FILE);
             assertNull(generated_iri_3);
         }
 
         @Test
         public void generateUniqueIRIWithDate() {
 
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
-            assertTrue(generated_iri.contains(template));
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
+        public void implicitCreate() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            String generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
+        public void implicitUpdate() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+
+            IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+
+            value = "pressure=6";
+            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
+        public void implicitDelete() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5";
+            boolean isUnique = false;
+            final String MAGIC_MARKER = "!@#$%^&*()_+";
+            List <String> generated_iris;
+            final MapState DELETE_STATE = new MapDBState();
+            final String UNSEEN_ID = "UNSEEN";
+
+            /* Add 2 members to state, both unseen */
+            DELETE_STATE.put(DELETE_FILE, iri, UNSEEN_ID);
+            iri = "http://example.com/sensor1/";
+            value = "pressure=6";
+            DELETE_STATE.put(DELETE_FILE, iri, UNSEEN_ID);
+
+            /* Mark 1 member as seen */
+            generated_iris = IDLabFunctions.implicitDelete(iri, value, isUnique, DELETE_FILE);
+            assertNull(generated_iris);
+
+            /* Process all deletions, 1 is unseen thus deleted */
+            generated_iris = IDLabFunctions.implicitDelete(MAGIC_MARKER, value, isUnique, DELETE_FILE);
+            assertNotNull(generated_iris);
+            assertTrue(generated_iris.size() == 1);
         }
 
         @Test
         public void testSaveState() {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
 
             IDLabFunctions.saveState();
@@ -295,11 +348,11 @@ public class IDLabFunctionsTest {
 
         @Test
         public void testDefaultStateFile() throws IOException {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, null);
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, null);
             assertNotNull(generated_iri);
 
             // check state dir
@@ -315,11 +368,11 @@ public class IDLabFunctionsTest {
 
         @Test
         public void testTmpStateFile() throws IOException {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, "__tmp");
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, "__tmp");
             assertNotNull(generated_iri);
 
             // check state dir
@@ -335,11 +388,11 @@ public class IDLabFunctionsTest {
 
         @Test
         public void testWorkingDirState() throws IOException {
-            String template = "http://example.com/sensor2/";
+            String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.generateUniqueIRI(template, value, isUnique, "__working_dir");
+            String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, "__working_dir");
             assertNotNull(generated_iri);
 
             // check state dir

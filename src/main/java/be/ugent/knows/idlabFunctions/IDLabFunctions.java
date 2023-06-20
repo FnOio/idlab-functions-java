@@ -37,12 +37,37 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
+    private final static MapState CREATE_STATE = new MapDBState();
+    private final static MapState UPDATE_STATE = new MapDBState();
+    private final static MapState DELETE_STATE = new MapDBState();
     private final static MapState UNIQUE_IRI_STATE = new MapDBState();
+    public final static String MAGIC_MARKER = "!@#$%^&*()_+";
+    public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26*%28%29_%2B";
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<String, List<String[]>> CACHE = new HashMap<>();
+
+    /**
+     * Resolve the state dir path. If not supplied, a path is constructed from a temporary directory.
+     * The working directory can be used if the path equals to __working_dir or a temporary directory if the path
+     * equals to __tmp. If a specific path is provided, it is just returned
+     * @param stateDirPathStr
+     * @return the resolved state dir path
+     */
+    private static String resolveStateDirPath(String stateDirPathStr, String state_file) {
+        final String actualStateDirPathStr;
+        if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
+            actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), state_file).getPath();
+        } else if (stateDirPathStr.equals("__working_dir")) {
+            actualStateDirPathStr = new File(System.getProperty("user.dir"), state_file).getPath();
+        } else {
+            actualStateDirPathStr = stateDirPathStr;
+        }
+
+        return actualStateDirPathStr;
+    }
 
     public static Map<SearchParameters, String> getMultipleLookupStateSet(){
         return Cache.getMultipleLookupStateMap();
@@ -308,15 +333,24 @@ public class IDLabFunctions {
     }
 
     public static void saveState() {
+        CREATE_STATE.saveAllState();
+        UPDATE_STATE.saveAllState();
+        DELETE_STATE.saveAllState();
         UNIQUE_IRI_STATE.saveAllState();
     }
 
     public static void resetState() {
+        CREATE_STATE.deleteAllState();
+        UPDATE_STATE.deleteAllState();
+        DELETE_STATE.deleteAllState();
         UNIQUE_IRI_STATE.deleteAllState();
     }
 
     public static void close() {
         try {
+            CREATE_STATE.close();
+            UPDATE_STATE.close();
+            DELETE_STATE.close();
             UNIQUE_IRI_STATE.close();
         } catch (Exception e) {
             logger.warn("Cannot close state.", e);
@@ -332,17 +366,17 @@ public class IDLabFunctions {
      * A unique IRI will be generated from the provided "template" string by appending the current
      * date timestamp.
      *
-     * @param template             The template string used to generate unique IRI. If it is guaranteed to be unique
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
      *                             {@code true}, this function returns the value of the {@code template} parameters.
      *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
      *                             same value as the previous call then there's no update and this function returns {@code null}.
      *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
      *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -356,24 +390,178 @@ public class IDLabFunctions {
      * @return A unique IRI will be generated from the provided "template" string by appending a unique string
      * if possible. Otherwise, null is returned.
      */
-    public static String generateUniqueIRI(String template, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+    public static String generateUniqueIRI(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr;
-            if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
-                actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state").getPath();
-            } else if (stateDirPathStr.equals("__working_dir")) {
-                actualStateDirPathStr = new File(System.getProperty("user.dir"), "unique_iri_state").getPath();
-            } else {
-                actualStateDirPathStr = stateDirPathStr;
-            }
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
             final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
-            Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, template, watchedPropertyString);
+            Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
             return indexOpt
-                    .map(integer -> template + '#' + Long.toString(integer, Character.MAX_RADIX))
+                    .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
                     .orElse(null);
-        } else {
-            return template;
         }
+
+        return iri;
+    }
+
+    /**
+     * Detect implicit created members by checking if their IRI exists in the state or not.
+     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
+     *                             {@code true}, this function returns the value of the {@code template} parameters.
+     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
+     *                             same value as the previous call then there's no update and this function returns {@code null}.
+     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
+     *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             </ul>
+     * @return A unique IRI will be generated from the provided IRI by appending a unique string
+     * if possible. Otherwise, null is returned.
+     */
+    public static String implicitCreate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+            return null;
+
+        /* IRI in state, cannot be added anymore */
+        if ((isUnique == null || !isUnique) && CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+            return null;
+
+        Optional<Integer> indexOpt = CREATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return indexOpt
+               .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
+               .orElse(null);
+    }
+
+    /**
+     * Detect implicit modified members by checking if their IRI exists in the state or not and if their properties
+     * were modified.
+     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
+     *                             {@code true}, this function returns the value of the {@code template} parameters.
+     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
+     *                             same value as the previous call then there's no update and this function returns {@code null}.
+     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
+     *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             </ul>
+     * @return A unique IRI will be generated from the provided IRI by appending a unique string
+     * if possible. Otherwise, null is returned.
+     */
+    public static String implicitUpdate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+            return null;
+
+        /* IRI not in state, cannot be modified yet. Insert it */
+        if ((isUnique == null || !isUnique) && !UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
+            UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+            return null;
+        }
+
+        Optional<Integer> indexOpt = UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return indexOpt
+               .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
+               .orElse(null);
+    }
+
+
+    /**
+     * Detect implicit deleted members by checking if their IRI is not present anymore in the current version.
+     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
+     *                             {@code true}, this function returns the value of the {@code template} parameters.
+     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
+     *                             same value as the previous call then there's no update and this function returns {@code null}.
+     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
+     *                             this function returns an IRI composed of the template + a unique string.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             </ul>
+     * @return A unique IRI will be generated from the provided IRI by appending a unique string
+     * if possible. Otherwise, null is returned.
+     */
+    public static List<String> implicitDelete(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+        List<String> iris = new ArrayList<>();
+        final String SEEN_ID = "SEEN";
+        final String NOT_SEEN_ID = "NOT-SEEN";
+
+        if (isUnique == null || !isUnique) {
+            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
+
+            /* Process deletions when marker found */
+            if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
+                for (Map.Entry<String, List<String>> entry : DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
+                    if (!entry.getValue().get(0).equals(SEEN_ID)) {
+                        DELETE_STATE.remove(actualStateDirPathStr, entry.getKey());
+                        iris.add(IDLabFunctions.generateUniqueIRI(entry.getKey(), "", false, actualStateDirPathStr));
+                    } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
+                        List<String> value = new ArrayList<>();
+                        value.add(NOT_SEEN_ID);
+                        DELETE_STATE.replace(actualStateDirPathStr, entry.getKey(), value);
+                    }
+                }
+
+                /* Return NULL when list is empty to avoid triggering any Triples Map */
+                return iris.isEmpty() ? null : iris;
+            /* Mark IRI as seen */
+            } else {
+                if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
+                    List<String> value = new ArrayList<>();
+                    value.add(SEEN_ID);
+                    DELETE_STATE.replace(actualStateDirPathStr, iri, value);
+                }
+                return null;
+            }
+        }
+
+        /* Pass through when unique */
+        iris.add(iri);
+        return iris;
     }
 
     /**

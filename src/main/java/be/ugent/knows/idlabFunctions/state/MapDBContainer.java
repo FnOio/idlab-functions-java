@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * A record holding a MapDB instance and the corresponding map.
@@ -69,7 +70,7 @@ public class MapDBContainer {
     }
 
     public Optional<Integer> putAndReturnIndex(String key, String value) {
-        Set<String> values = mapDB.hashSet(key, Serializer.STRING).createOrOpen();
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen(); //mapDB.hashSet(key, Serializer.STRING).createOrOpen();
         if (values.isEmpty()) {
             values.add(value);
             return Optional.of(0);
@@ -83,6 +84,24 @@ public class MapDBContainer {
         }
     }
 
+    public boolean hasKey(String key) {
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen(); //mapDB.hashSet(key, Serializer.STRING).createOrOpen();
+
+        if (values.isEmpty())
+            return false;
+
+        return true;
+    }
+
+    public Map<String, List<String>> getEntries() {
+        Map <String, List<String>> entries = new HashMap<>();
+        for (String key: mapDB.getAllNames()) {
+            IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+            entries.put(key, values);
+        }
+        return entries;
+    }
+
     public long count(String key) {
         Object valuesObject = mapDB.get(key);
         if (valuesObject == null) {
@@ -91,6 +110,12 @@ public class MapDBContainer {
             List<String> values = Collections.unmodifiableList((List<String>) valuesObject);
             return values.size();
         }
+    }
+
+    public void replace(String key, List<String> value) {
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+        values.clear();
+        values.addAll(value);
     }
 
     public void close() {
@@ -110,4 +135,8 @@ public class MapDBContainer {
         }));
     }
 
+    public void remove(String key) {
+        IndexTreeList<String> values = mapDB.indexTreeList(key, Serializer.STRING).createOrOpen();
+        values.clear();
+    }
 }
