@@ -18,3 +18,10 @@ To install in your local maven repo:
 ```
 mvn install
 ```
+
+## State
+Some functions keep state persisted on disk. 
+Each such function has an argument `stateDirPathStr` where one can specify the location of the state.
+
+Instead of using the argument `stateDirPathStr`, one can use the property `ifState` and pass `null` to `stateDirPathStr`.
+The java process then needs to be started as `java -DifState=/path/to/your/state/directory ...`

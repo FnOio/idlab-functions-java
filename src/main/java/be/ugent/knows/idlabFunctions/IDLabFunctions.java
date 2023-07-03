@@ -50,17 +50,30 @@ public class IDLabFunctions {
     private static final Map<String, List<String[]>> CACHE = new HashMap<>();
 
     /**
-     * Resolve the state dir path. If not supplied, a path is constructed from a temporary directory.
+     * Resolve the state dir path. If not supplied, a path is constructed from a given property `ifState` if set,
+     * or the system's temporary directory if not set.
      * The working directory can be used if the path equals to __working_dir or a temporary directory if the path
      * equals to __tmp. If a specific path is provided, it is just returned
-     * @param stateDirPathStr
+     * @param stateDirPathStr   String representation of the file path in which the state of the function
+     *                          will be stored. It can have four kinds of values:
+     *                          <ul>
+     *                          <li>{@code __tmp}: The state is kept in a file {@code state_file} in a
+     *                          temporary directory determined by the OS. </li>
+     *                          <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                          user's current working directory.</li>
+     *                          <li>The path to the directory where state is / will be kept.</li>
+     *                          <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                          the behaviour is the same as if it were {@code __tmp}</li>
+     *                          </ul>
+     * @param state_file        The file where state is kept within {@code stateDirPathStr}.
      * @return the resolved state dir path
      */
     private static String resolveStateDirPath(String stateDirPathStr, String state_file) {
         final String actualStateDirPathStr;
-        if (stateDirPathStr == null || stateDirPathStr.equals("__tmp")) {
+        final String checkedStateDirPathStr = stateDirPathStr == null ? System.getProperty("ifState", "__tmp") : stateDirPathStr;
+        if (checkedStateDirPathStr.equals("__tmp")) {
             actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), state_file).getPath();
-        } else if (stateDirPathStr.equals("__working_dir")) {
+        } else if (checkedStateDirPathStr.equals("__working_dir")) {
             actualStateDirPathStr = new File(System.getProperty("user.dir"), state_file).getPath();
         } else {
             actualStateDirPathStr = stateDirPathStr;
@@ -377,16 +390,17 @@ public class IDLabFunctions {
      *                             this function returns an IRI composed of the template + a unique string.
      * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
      *                             used if the template is not unique (set by the {@code isUnique} parameter).
-     * @param stateDirPathStr      String representation of the file path in which the state of the function
-     *                             will be stored. It can have four kinds of values:
-     *                             <ul>
-     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
-     *                             temporary directory determined by the OS. </li>
-     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
-     *                             user's current working directory.</li>
-     *                             <li>The path to the directory where state is / will be kept.</li>
-     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
-     *                             </ul>
+     * @param stateDirPathStr       String representation of the file path in which the state of the function
+     *                              will be stored. It can have four kinds of values:
+     *                              <ul>
+     *                              <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                              temporary directory determined by the OS. </li>
+     *                              <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                              user's current working directory.</li>
+     *                              <li>The path to the directory where state is / will be kept.</li>
+     *                              <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                              the behaviour is the same as if it were {@code __tmp}</li>
+     *                              </ul>
      * @return A unique IRI will be generated from the provided "template" string by appending a unique string
      * if possible. Otherwise, null is returned.
      */
@@ -421,12 +435,13 @@ public class IDLabFunctions {
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
-     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             <li>{@code __tmp}: The state is kept in a file {@code state_file} in a
      *                             temporary directory determined by the OS. </li>
-     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_create_state} in the
      *                             user's current working directory.</li>
      *                             <li>The path to the directory where state is / will be kept.</li>
-     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                             the behaviour is the same as if it were {@code __tmp}</li>
      *                             </ul>
      * @return A unique IRI will be generated from the provided IRI by appending a unique string
      * if possible. Otherwise, null is returned.
@@ -467,12 +482,13 @@ public class IDLabFunctions {
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
-     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_create_state} in a
      *                             temporary directory determined by the OS. </li>
-     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_create_state} in the
      *                             user's current working directory.</li>
      *                             <li>The path to the directory where state is / will be kept.</li>
-     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                             the behaviour is the same as if it were {@code __tmp}</li>
      *                             </ul>
      * @return A unique IRI will be generated from the provided IRI by appending a unique string
      * if possible. Otherwise, null is returned.
@@ -515,12 +531,13 @@ public class IDLabFunctions {
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
-     *                             <li>{@code __tmp}: The state is kept in a file {@code unique_iri_state} in a
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_delete_state} in a
      *                             temporary directory determined by the OS. </li>
-     *                             <li>{@code __working_dir} The state is kept in a file {@code unique_iri_state} in the
+     *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_delete_state} in the
      *                             user's current working directory.</li>
      *                             <li>The path to the directory where state is / will be kept.</li>
-     *                             <li>{@code null}, which is the same as {@code __tmp}</li>
+     *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                             the behaviour is the same as if it were {@code __tmp}</li>
      *                             </ul>
      * @return A unique IRI will be generated from the provided IRI by appending a unique string
      * if possible. Otherwise, null is returned.

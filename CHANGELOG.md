@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- Java property `ifState` to point to directory keeping state (at startup time), used when the corresponding function
+  argument is `null`. Example usage: `java -DifState=/my/temp/dir ...`
+
 ## [0.3.2] - 2023-06-12
 
 ### Fixed
