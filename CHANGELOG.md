@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - IDLabFunctions: rename 'template' to 'iri'
+- IDLabFunctions: improve implicitDelete documentation
 
 ### Changed
 - IDLabFunctions: move state dir path resolving to separate method

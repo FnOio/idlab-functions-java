@@ -568,10 +568,18 @@ public class IDLabFunctions {
 
             /* Process deletions when marker found */
             if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
+                /* Iterate over each entry we may or may not have seen */
                 for (Map.Entry<String, List<String>> entry : DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
+                    /* We haven't seen this entry, thus it has been removed in the current version */
                     if (!entry.getValue().get(0).equals(SEEN_ID)) {
+                        /* Remove the entry from the state as it is deleted */
                         DELETE_STATE.remove(actualStateDirPathStr, entry.getKey());
+                        /* Generate an unique IRI for this entry to have a tombstone object */
                         iris.add(IDLabFunctions.generateUniqueIRI(entry.getKey(), "", false, actualStateDirPathStr));
+                    /*
+                     * If we have seen the entry, mark it unseen for the next time we have to check for deletions,
+                     * but we never want to insert IRIs with the marker in that triggered the check, so skip those
+                     */
                     } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
                         List<String> value = new ArrayList<>();
                         value.add(NOT_SEEN_ID);
@@ -583,7 +591,9 @@ public class IDLabFunctions {
                 return iris.isEmpty() ? null : iris;
             /* Mark IRI as seen */
             } else {
+                /* Never insert IRIs into the state which contain the marker */
                 if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
+                    /* Insert the IRI into the state and mark it as seen */
                     List<String> value = new ArrayList<>();
                     value.add(SEEN_ID);
                     DELETE_STATE.replace(actualStateDirPathStr, iri, value);
