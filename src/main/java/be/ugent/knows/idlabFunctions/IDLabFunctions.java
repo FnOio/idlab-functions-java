@@ -435,7 +435,7 @@ public class IDLabFunctions {
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
-     *                             <li>{@code __tmp}: The state is kept in a file {@code state_file} in a
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_create_state} in a
      *                             temporary directory determined by the OS. </li>
      *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_create_state} in the
      *                             user's current working directory.</li>
