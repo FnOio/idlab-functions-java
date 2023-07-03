@@ -482,7 +482,7 @@ public class IDLabFunctions {
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
-     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_create_state} in a
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_update_state} in a
      *                             temporary directory determined by the OS. </li>
      *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_create_state} in the
      *                             user's current working directory.</li>
@@ -494,7 +494,7 @@ public class IDLabFunctions {
      * if possible. Otherwise, null is returned.
      */
     public static String implicitUpdate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
-        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_update_state");
         final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
         if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
