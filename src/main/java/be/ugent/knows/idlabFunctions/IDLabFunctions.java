@@ -69,17 +69,33 @@ public class IDLabFunctions {
      * @return the resolved state dir path
      */
     private static String resolveStateDirPath(String stateDirPathStr, String state_file) {
-        final String actualStateDirPathStr;
-        final String checkedStateDirPathStr = stateDirPathStr == null ? System.getProperty("ifState", "__tmp") : stateDirPathStr;
-        if (checkedStateDirPathStr.equals("__tmp")) {
-            actualStateDirPathStr = new File(System.getProperty("java.io.tmpdir"), state_file).getPath();
-        } else if (checkedStateDirPathStr.equals("__working_dir")) {
-            actualStateDirPathStr = new File(System.getProperty("user.dir"), state_file).getPath();
+        final String actualStateFilePathStr;
+        final String checkedStateDirPathStr;
+        if (stateDirPathStr == null || stateDirPathStr.isEmpty()) {
+            logger.debug("stateDirPathStr = NULL. Trying to read ifState property.");
+            checkedStateDirPathStr = System.getProperty("ifState", "__tmp");
         } else {
-            actualStateDirPathStr = stateDirPathStr;
+            checkedStateDirPathStr = stateDirPathStr;
         }
-
-        return actualStateDirPathStr;
+        logger.debug("checkedStateDirPathStr = '{}'", checkedStateDirPathStr);
+        if (checkedStateDirPathStr.equals("__tmp")) {
+            actualStateFilePathStr = new File(System.getProperty("java.io.tmpdir"), state_file).getPath();
+        } else if (checkedStateDirPathStr.equals("__working_dir")) {
+            actualStateFilePathStr = new File(System.getProperty("user.dir"), state_file).getPath();
+        } else {
+            File stateDir = new File(checkedStateDirPathStr);
+            if (!stateDir.exists()) {
+                if (stateDir.mkdirs()) {
+                    logger.debug("Created new state file directory '{}'", stateDir);
+                } else {
+                    logger.warn("Could not create new state directory {}! Using system temporary directory.", stateDir);
+                    stateDir = new File(System.getProperty("java.io.tmpdir"));
+                }
+            }
+            actualStateFilePathStr = new File(stateDir, state_file).getPath();
+        }
+        logger.debug("actualStateFilePathStr = '{}'", actualStateFilePathStr);
+        return actualStateFilePathStr;
     }
 
     public static Map<SearchParameters, String> getMultipleLookupStateSet(){
