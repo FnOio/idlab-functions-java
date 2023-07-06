@@ -11,11 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Java property `ifState` to point to directory keeping state (at startup time), used when the corresponding function
   argument is `null`. Example usage: `java -DifState=/my/temp/dir ...`
 
+### Changed
+- IDLabFunctions: improve implicitDelete documentation
+
+### Fixed
+- When a custom state path was given, the state file ended up in the wrong place.
+
 ## [0.3.2] - 2023-06-12
 
 ### Fixed
 - IDLabFunctions: rename 'template' to 'iri'
-- IDLabFunctions: improve implicitDelete documentation
+
 
 ### Changed
 - IDLabFunctions: move state dir path resolving to separate method
