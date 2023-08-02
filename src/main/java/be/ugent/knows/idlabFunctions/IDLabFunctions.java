@@ -86,7 +86,7 @@ public class IDLabFunctions {
         } else if (checkedStateDirPathStr.equals("__working_dir")) {
             actualStateFilePathStr = new File(System.getProperty("user.dir"), state_file).getPath();
         } else {
-            File stateDir = new File(checkedStateDirPathStr);
+            File stateDir = new File(checkedStateDirPathStr).getParentFile();
             if (!stateDir.exists()) {
                 if (stateDir.mkdirs()) {
                     logger.debug("Created new state file directory '{}'", stateDir);
@@ -95,7 +95,7 @@ public class IDLabFunctions {
                     stateDir = new File(System.getProperty("java.io.tmpdir"));
                 }
             }
-            actualStateFilePathStr = new File(stateDir, state_file).getPath();
+            actualStateFilePathStr = new File(stateDir, new File(checkedStateDirPathStr).getName()).getPath();
         }
         logger.debug("actualStateFilePathStr = '{}'", actualStateFilePathStr);
         return actualStateFilePathStr;
