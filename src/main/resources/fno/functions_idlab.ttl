@@ -163,7 +163,7 @@ idlab-fn:implicitCreate
     a                   fno:Function ;
     fno:name            "implicitCreate" ;
     rdfs:label          "implicitCreate" ;
-    dcterms:description "Generates a unique IRI by when an entity is implicitely created" ;
+    dcterms:description "Returns an IRI when an entity is implicitely created" ;
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
@@ -171,7 +171,7 @@ idlab-fn:implicitUpdate
     a                   fno:Function ;
     fno:name            "implicitUpdate" ;
     rdfs:label          "implicitUpdate" ;
-    dcterms:description "Generates a unique IRI by when an entity is implicitely updated" ;
+    dcterms:description "Returns an IRI when an entity is implicitely updated" ;
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
@@ -179,9 +179,33 @@ idlab-fn:implicitDelete
     a                   fno:Function ;
     fno:name            "implicitDelete" ;
     rdfs:label          "implicitDelete" ;
-    dcterms:description "Generates a unique IRI by when an entity is implicitely deleted" ;
+    dcterms:description "Returns an IRI when an entity is implicitely deleted" ;
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_listOut ) .
+
+idlab-fn:explicitCreate
+    a                   fno:Function ;
+    fno:name            "explicitCreate" ;
+    rdfs:label          "explicitCreate" ;
+    dcterms:description "Returns an IRI when an entity is explicitely created" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
+idlab-fn:explicitUpdate
+    a                   fno:Function ;
+    fno:name            "explicitUpdate" ;
+    rdfs:label          "explicitUpdate" ;
+    dcterms:description "Returns an IRI when an entity is explicitely updated" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
+idlab-fn:explicitDelete
+    a                   fno:Function ;
+    fno:name            "explicitDelete" ;
+    rdfs:label          "explicitDelete" ;
+    dcterms:description "Returns an IRI when an entity is explicitely deleted" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
 
 idlab-fn:toUpperCaseURL
     a                   fno:Function ;
@@ -560,6 +584,24 @@ idlab-fn-m:implicitDeleteMapping
     fno:function		idlab-fn:implicitDelete;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "implicitDelete" ] .
+
+idlab-fn-m:explicitCreateMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:explicitCreate;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "explicitCreate" ] .
+
+idlab-fn-m:explicitUpdateMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:explicitUpdate;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "explicitUpdate" ] .
+
+idlab-fn-m:explicitDeleteMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:explicitDelete;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "explicitDelete" ] .
 
 idlab-fn-m:toUpperCaseURLMapping
 	a                   fno:Mapping ;

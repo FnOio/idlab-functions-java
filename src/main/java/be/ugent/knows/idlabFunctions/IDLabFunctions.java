@@ -37,12 +37,15 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private final static MapState CREATE_STATE = new MapDBState();
-    private final static MapState UPDATE_STATE = new MapDBState();
-    private final static MapState DELETE_STATE = new MapDBState();
+    private final static MapState IMPLICIT_CREATE_STATE = new MapDBState();
+    private final static MapState IMPLICIT_UPDATE_STATE = new MapDBState();
+    private final static MapState IMPLICIT_DELETE_STATE = new MapDBState();
+    private final static MapState EXPLICIT_CREATE_STATE = new MapDBState();
+    private final static MapState EXPLICIT_UPDATE_STATE = new MapDBState();
+    private final static MapState EXPLICIT_DELETE_STATE = new MapDBState();
     private final static MapState UNIQUE_IRI_STATE = new MapDBState();
-    public final static String MAGIC_MARKER = "!@#$%^&*()_+";
-    public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26*%28%29_%2B";
+    public final static String MAGIC_MARKER = "!@#$%^&()_+";
+    public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26%28%29_%2B";
 
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
@@ -362,24 +365,33 @@ public class IDLabFunctions {
     }
 
     public static void saveState() {
-        CREATE_STATE.saveAllState();
-        UPDATE_STATE.saveAllState();
-        DELETE_STATE.saveAllState();
+        IMPLICIT_CREATE_STATE.saveAllState();
+        IMPLICIT_UPDATE_STATE.saveAllState();
+        IMPLICIT_DELETE_STATE.saveAllState();
+        EXPLICIT_CREATE_STATE.saveAllState();
+        EXPLICIT_UPDATE_STATE.saveAllState();
+        EXPLICIT_DELETE_STATE.saveAllState();
         UNIQUE_IRI_STATE.saveAllState();
     }
 
     public static void resetState() {
-        CREATE_STATE.deleteAllState();
-        UPDATE_STATE.deleteAllState();
-        DELETE_STATE.deleteAllState();
+        IMPLICIT_CREATE_STATE.deleteAllState();
+        IMPLICIT_UPDATE_STATE.deleteAllState();
+        IMPLICIT_DELETE_STATE.deleteAllState();
+        EXPLICIT_CREATE_STATE.deleteAllState();
+        EXPLICIT_UPDATE_STATE.deleteAllState();
+        EXPLICIT_DELETE_STATE.deleteAllState();
         UNIQUE_IRI_STATE.deleteAllState();
     }
 
     public static void close() {
         try {
-            CREATE_STATE.close();
-            UPDATE_STATE.close();
-            DELETE_STATE.close();
+            IMPLICIT_CREATE_STATE.close();
+            IMPLICIT_UPDATE_STATE.close();
+            IMPLICIT_DELETE_STATE.close();
+            EXPLICIT_CREATE_STATE.close();
+            EXPLICIT_UPDATE_STATE.close();
+            EXPLICIT_DELETE_STATE.close();
             UNIQUE_IRI_STATE.close();
         } catch (Exception e) {
             logger.warn("Cannot close state.", e);
@@ -392,8 +404,6 @@ public class IDLabFunctions {
      * generated. Otherwise, null String will be returned.
      * In order to check if the watched properties have changed, a file state is written to keep track of
      * previously seen property values.
-     * A unique IRI will be generated from the provided "template" string by appending the current
-     * date timestamp.
      *
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
@@ -435,7 +445,6 @@ public class IDLabFunctions {
 
     /**
      * Detect implicit created members by checking if their IRI exists in the state or not.
-     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
      *
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
@@ -459,8 +468,7 @@ public class IDLabFunctions {
      *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
      *                             the behaviour is the same as if it were {@code __tmp}</li>
      *                             </ul>
-     * @return A unique IRI will be generated from the provided IRI by appending a unique string
-     * if possible. Otherwise, null is returned.
+     * @return The IRI is returned if the member was created, otherwise null.
      */
     public static String implicitCreate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
@@ -470,19 +478,56 @@ public class IDLabFunctions {
             return null;
 
         /* IRI in state, cannot be added anymore */
-        if ((isUnique == null || !isUnique) && CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+        if (IMPLICIT_CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+            return null;
+        /* IRI not in state, add it and return it. */
+        else {
+            IMPLICIT_CREATE_STATE.put(actualStateDirPathStr, iri, watchedPropertyString);
+            return iri;
+        }
+    }
+
+    /**
+     * Detect explicit created members by checking if their IRI exists in the state or not.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_create_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_create_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                             the behaviour is the same as if it were {@code __tmp}</li>
+     *                             </ul>
+     * @return The IRI is returned if the member was created, otherwise null.
+     */
+    public static String explicitCreate(String iri, String watchedValueTemplate, String stateDirPathStr) {
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_create_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
-        Optional<Integer> indexOpt = CREATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
-        return indexOpt
-               .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
-               .orElse(null);
+        /* IRI in state, cannot be added anymore */
+        if (EXPLICIT_CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+            return null;
+            /* IRI not in state, add it and return it. */
+        else {
+            EXPLICIT_CREATE_STATE.put(actualStateDirPathStr, iri, watchedPropertyString);
+            return iri;
+        }
     }
 
     /**
      * Detect implicit modified members by checking if their IRI exists in the state or not and if their properties
      * were modified.
-     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
      *
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
@@ -506,8 +551,7 @@ public class IDLabFunctions {
      *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
      *                             the behaviour is the same as if it were {@code __tmp}</li>
      *                             </ul>
-     * @return A unique IRI will be generated from the provided IRI by appending a unique string
-     * if possible. Otherwise, null is returned.
+     * @return The IRI is returned if the member was updated, otherwise null.
      */
     public static String implicitUpdate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_update_state");
@@ -517,21 +561,49 @@ public class IDLabFunctions {
             return null;
 
         /* IRI not in state, cannot be modified yet. Insert it */
-        if ((isUnique == null || !isUnique) && !UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
-            UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        if (!IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
+            IMPLICIT_UPDATE_STATE.put(actualStateDirPathStr, iri, watchedPropertyString);
             return null;
         }
 
-        Optional<Integer> indexOpt = UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
-        return indexOpt
-               .map(integer -> iri + '#' + Long.toString(integer, Character.MAX_RADIX))
-               .orElse(null);
+        /* Return IRI if the value is new, otherwise return NULL */
+        Optional<Integer> index = IMPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return index.isEmpty()? null: iri;
     }
 
+    /**
+     * Detect explicit modified members by checking if their IRI exists in the state or not and if their properties
+     * were modified.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_update_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_create_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                             the behaviour is the same as if it were {@code __tmp}</li>
+     *                             </ul>
+     * @return The IRI is returned if the member was updated, otherwise null.
+     */
+    public static String explicitUpdate(String iri, String watchedValueTemplate, String stateDirPathStr) {
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_update_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        /* Return IRI if the value is new, otherwise return NULL */
+        Optional<Integer> index = EXPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return index.isEmpty()? null: iri;
+    }
 
     /**
      * Detect implicit deleted members by checking if their IRI is not present anymore in the current version.
-     * Depending on the outcome, generate an unique IRI if isUnique is false. Otherwise, return the IRI unchanged.
      *
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
@@ -555,56 +627,81 @@ public class IDLabFunctions {
      *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
      *                             the behaviour is the same as if it were {@code __tmp}</li>
      *                             </ul>
-     * @return A unique IRI will be generated from the provided IRI by appending a unique string
-     * if possible. Otherwise, null is returned.
+     * @return List of IRIs is returned of deleted members. An empty list indicates no deletions.
      */
     public static List<String> implicitDelete(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         List<String> iris = new ArrayList<>();
         final String SEEN_ID = "SEEN";
         final String NOT_SEEN_ID = "NOT-SEEN";
 
-        if (isUnique == null || !isUnique) {
-            final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
 
-            /* Process deletions when marker found */
-            if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
-                /* Iterate over each entry we may or may not have seen */
-                for (Map.Entry<String, List<String>> entry : DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
-                    /* We haven't seen this entry, thus it has been removed in the current version */
-                    if (!entry.getValue().get(0).equals(SEEN_ID)) {
-                        /* Remove the entry from the state as it is deleted */
-                        DELETE_STATE.remove(actualStateDirPathStr, entry.getKey());
-                        /* Generate an unique IRI for this entry to have a tombstone object */
-                        iris.add(IDLabFunctions.generateUniqueIRI(entry.getKey(), "", false, actualStateDirPathStr));
-                    /*
-                     * If we have seen the entry, mark it unseen for the next time we have to check for deletions,
-                     * but we never want to insert IRIs with the marker in that triggered the check, so skip those
-                     */
-                    } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
-                        List<String> value = new ArrayList<>();
-                        value.add(NOT_SEEN_ID);
-                        DELETE_STATE.replace(actualStateDirPathStr, entry.getKey(), value);
-                    }
+        /* Process deletions when marker found */
+        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
+            /* Iterate over each entry we may or may not have seen */
+            for (Map.Entry<String, List<String>> entry : IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
+                /* We haven't seen this entry, thus it has been removed in the current version */
+                if (entry.getValue().size() == 0) {
+                    continue;
                 }
-
-                /* Return NULL when list is empty to avoid triggering any Triples Map */
-                return iris.isEmpty() ? null : iris;
-            /* Mark IRI as seen */
-            } else {
-                /* Never insert IRIs into the state which contain the marker */
-                if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
-                    /* Insert the IRI into the state and mark it as seen */
+                if (!entry.getValue().get(0).equals(SEEN_ID)) {
+                    /* Remove the entry from the state as it is deleted */
+                    IMPLICIT_DELETE_STATE.remove(actualStateDirPathStr, entry.getKey());
+                    iris.add(entry.getKey());
+                /*
+                 * If we have seen the entry, mark it unseen for the next time we have to check for deletions,
+                 * but we never want to insert IRIs with the marker in that triggered the check, so skip those
+                 */
+                } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
                     List<String> value = new ArrayList<>();
-                    value.add(SEEN_ID);
-                    DELETE_STATE.replace(actualStateDirPathStr, iri, value);
+                    value.add(NOT_SEEN_ID);
+                    IMPLICIT_DELETE_STATE.replace(actualStateDirPathStr, entry.getKey(), value);
                 }
-                return null;
             }
-        }
 
-        /* Pass through when unique */
-        iris.add(iri);
-        return iris;
+            /* Return NULL when list is empty to avoid triggering any Triples Map */
+            return iris.isEmpty() ? null : iris;
+        /* Mark IRI as seen */
+        } else {
+            /* Never insert IRIs into the state which contain the marker */
+            if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
+                /* Insert the IRI into the state and mark it as seen */
+                List<String> value = new ArrayList<>();
+                value.add(SEEN_ID);
+                IMPLICIT_DELETE_STATE.replace(actualStateDirPathStr, iri, value);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Detect explicit deleted members by checking if their IRI is not present anymore in the current version.
+     *
+     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
+     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     *                             If not, a unique string will be appended to the returned IRI.
+     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
+     *                             used if the template is not unique (set by the {@code isUnique} parameter).
+     * @param stateDirPathStr      String representation of the file path in which the state of the function
+     *                             will be stored. It can have four kinds of values:
+     *                             <ul>
+     *                             <li>{@code __tmp}: The state is kept in a file {@code implicit_delete_state} in a
+     *                             temporary directory determined by the OS. </li>
+     *                             <li>{@code __working_dir} The state is kept in a file {@code implicit_delete_state} in the
+     *                             user's current working directory.</li>
+     *                             <li>The path to the directory where state is / will be kept.</li>
+     *                             <li>{@code null}: Use the value of the property {@code ifState} is set. If not set,
+     *                             the behaviour is the same as if it were {@code __tmp}</li>
+     *                             </ul>
+     * @return The IRI is returned if the member was deleted, otherwise null.
+     */
+    public static String explicitDelete(String iri, String watchedValueTemplate, String stateDirPathStr) {
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_delete_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        /* Return IRI if the value is new, otherwise return NULL */
+        Optional<Integer> index = EXPLICIT_DELETE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        return index.isEmpty()? null: iri;
     }
 
     /**

@@ -225,9 +225,7 @@ public class IDLabFunctionsTest {
 
     public static class LDESGenerationTests {
 
-        private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState1").getPath();
-        private static final String DELETE_FILE = new File(System.getProperty("java.io.tmpdir"), "tmpState2").getPath();
-
+        private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "state_file").getPath();
 
         @AfterEach
         public void cleanUp() {
@@ -245,7 +243,6 @@ public class IDLabFunctionsTest {
             String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, STATE_FILE);
             assertNull(generated_iri);
         }
-
 
         @Test
         public void generateUniqueIRI() {
@@ -282,12 +279,35 @@ public class IDLabFunctionsTest {
         }
 
         @Test
+        public void explicitCreate() {
+            String iri = "http://example.com/sensor2/";
+            String value = "id=2";
+
+            String generated_iri = IDLabFunctions.explicitCreate(iri, value, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
         public void implicitCreate() {
             String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
             boolean isUnique = false;
 
             String generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
+        public void explicitUpdate() {
+            String iri = "http://example.com/sensor2/";
+            String value = "id=2";
+
+            IDLabFunctions.explicitCreate(iri, value, STATE_FILE);
+
+            value = "id=4";
+            String generated_iri = IDLabFunctions.explicitUpdate(iri, value, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
         }
@@ -307,27 +327,35 @@ public class IDLabFunctionsTest {
         }
 
         @Test
+        public void explicitDelete() {
+            String iri = "http://example.com/sensor2/";
+            String value = "id=2";
+            String generated_iri;
+
+            generated_iri = IDLabFunctions.explicitDelete(iri, value, STATE_FILE);
+            assertTrue(generated_iri.contains(iri));
+        }
+
+        @Test
         public void implicitDelete() {
             String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
-            boolean isUnique = false;
-            final String MAGIC_MARKER = "!@#$%^&*()_+";
             List <String> generated_iris;
             final MapState DELETE_STATE = new MapDBState();
             final String UNSEEN_ID = "UNSEEN";
 
             /* Add 2 members to state, both unseen */
-            DELETE_STATE.put(DELETE_FILE, iri, UNSEEN_ID);
+            DELETE_STATE.put(STATE_FILE, iri, UNSEEN_ID);
             iri = "http://example.com/sensor1/";
             value = "pressure=6";
-            DELETE_STATE.put(DELETE_FILE, iri, UNSEEN_ID);
+            DELETE_STATE.put(STATE_FILE, iri, UNSEEN_ID);
 
             /* Mark 1 member as seen */
-            generated_iris = IDLabFunctions.implicitDelete(iri, value, isUnique, DELETE_FILE);
+            generated_iris = IDLabFunctions.implicitDelete(iri, value, false, STATE_FILE);
             assertNull(generated_iris);
 
             /* Process all deletions, 1 is unseen thus deleted */
-            generated_iris = IDLabFunctions.implicitDelete(MAGIC_MARKER, value, isUnique, DELETE_FILE);
+            generated_iris = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, value, false, STATE_FILE);
             assertNotNull(generated_iris);
             assertTrue(generated_iris.size() == 1);
         }
