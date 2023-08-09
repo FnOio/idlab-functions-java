@@ -2,6 +2,7 @@ package be.ugent.knows.idlabFunctions;
 
 import be.ugent.knows.idlabFunctions.state.MapDBState;
 import be.ugent.knows.idlabFunctions.state.MapState;
+import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
 import be.ugent.knows.util.Cache;
 import be.ugent.knows.util.SearchParameters;
 import be.ugent.knows.util.Utils;
@@ -37,13 +38,13 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private final static MapState IMPLICIT_CREATE_STATE = new MapDBState();
-    private final static MapState IMPLICIT_UPDATE_STATE = new MapDBState();
-    private final static MapState IMPLICIT_DELETE_STATE = new MapDBState();
-    private final static MapState EXPLICIT_CREATE_STATE = new MapDBState();
-    private final static MapState EXPLICIT_UPDATE_STATE = new MapDBState();
-    private final static MapState EXPLICIT_DELETE_STATE = new MapDBState();
-    private final static MapState UNIQUE_IRI_STATE = new MapDBState();
+    private final static MapState IMPLICIT_CREATE_STATE = new SimpleInMemoryMapState();
+    private final static MapState IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
+    private final static MapState IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
+    private final static MapState EXPLICIT_CREATE_STATE = new SimpleInMemoryMapState();
+    private final static MapState EXPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
+    private final static MapState EXPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
+    private final static MapState UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
     public final static String MAGIC_MARKER = "!@#$%^&()_+";
     public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26%28%29_%2B";
 
@@ -633,43 +634,53 @@ public class IDLabFunctions {
         List<String> iris = new ArrayList<>();
         final String SEEN_ID = "SEEN";
         final String NOT_SEEN_ID = "NOT-SEEN";
-
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
 
         /* Process deletions when marker found */
+        List<String> deleted = new ArrayList<>();
+        List<String> notSeen = new ArrayList<>();
         if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
             /* Iterate over each entry we may or may not have seen */
+            logger.debug("MAGIC MARKER");
+            logger.debug("Entries: {}", IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).size());
             for (Map.Entry<String, List<String>> entry : IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
+                logger.debug("IRI: {}: value: {}", entry.getKey(), entry.getValue());
                 /* We haven't seen this entry, thus it has been removed in the current version */
-                if (entry.getValue().size() == 0) {
+                if (entry.getValue().isEmpty())
                     continue;
-                }
+
                 if (!entry.getValue().get(0).equals(SEEN_ID)) {
-                    /* Remove the entry from the state as it is deleted */
-                    IMPLICIT_DELETE_STATE.remove(actualStateDirPathStr, entry.getKey());
+                    deleted.add(entry.getKey());
                     iris.add(entry.getKey());
+                    logger.debug("Haven't seen: {} since value {}", entry.getKey(), entry.getValue());
                 /*
                  * If we have seen the entry, mark it unseen for the next time we have to check for deletions,
                  * but we never want to insert IRIs with the marker in that triggered the check, so skip those
                  */
                 } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
-                    List<String> value = new ArrayList<>();
-                    value.add(NOT_SEEN_ID);
-                    IMPLICIT_DELETE_STATE.replace(actualStateDirPathStr, entry.getKey(), value);
+                    notSeen.add(entry.getKey());
                 }
+            }
+
+            /* Remove the entry from the state as it is deleted */
+            for (String key: deleted)
+                IMPLICIT_DELETE_STATE.remove(actualStateDirPathStr, key);
+
+            for (String key: notSeen) {
+                List<String> value = new ArrayList<>();
+                value.add(NOT_SEEN_ID);
+                IMPLICIT_DELETE_STATE.replace(actualStateDirPathStr, key, value);
             }
 
             /* Return NULL when list is empty to avoid triggering any Triples Map */
             return iris.isEmpty() ? null : iris;
         /* Mark IRI as seen */
         } else {
-            /* Never insert IRIs into the state which contain the marker */
-            if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
-                /* Insert the IRI into the state and mark it as seen */
-                List<String> value = new ArrayList<>();
-                value.add(SEEN_ID);
-                IMPLICIT_DELETE_STATE.replace(actualStateDirPathStr, iri, value);
-            }
+            logger.debug("Marking as seen: {}", iri);
+            /* Insert the IRI into the state and mark it as seen */
+            List<String> value = new ArrayList<>();
+            value.add(SEEN_ID);
+            IMPLICIT_DELETE_STATE.replace(actualStateDirPathStr, iri, value);
             return null;
         }
     }
