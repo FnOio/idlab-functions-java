@@ -2,6 +2,7 @@ package be.ugent.knows.idlabFunctions;
 
 import be.ugent.knows.idlabFunctions.state.MapDBState;
 import be.ugent.knows.idlabFunctions.state.MapState;
+import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
 import com.opencsv.exceptions.CsvValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
@@ -338,26 +339,29 @@ public class IDLabFunctionsTest {
 
         @Test
         public void implicitDelete() {
-            String iri = "http://example.com/sensor2/";
-            String value = "pressure=5";
-            List <String> generated_iris;
-            final MapState DELETE_STATE = new MapDBState();
-            final String UNSEEN_ID = "UNSEEN";
+            String iri1 = "http://example.com/sensor1/";
+            String iri2 = "http://example.com/sensor2/";
 
-            /* Add 2 members to state, both unseen */
-            DELETE_STATE.put(STATE_FILE, iri, UNSEEN_ID);
-            iri = "http://example.com/sensor1/";
-            value = "pressure=6";
-            DELETE_STATE.put(STATE_FILE, iri, UNSEEN_ID);
+            /* Mark 2 members as seen */
+            assertNull(IDLabFunctions.implicitDelete(iri1, "pressure=1", false, STATE_FILE));
+            IDLabFunctions.close();
+            assertNull(IDLabFunctions.implicitDelete(iri2, "pressure=2", false, STATE_FILE));
+            IDLabFunctions.close();
 
-            /* Mark 1 member as seen */
-            generated_iris = IDLabFunctions.implicitDelete(iri, value, false, STATE_FILE);
-            assertNull(generated_iris);
+            /* Process all deletions, none should be marked as deleted */
+            assertNull(IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, IDLabFunctions.MAGIC_MARKER, false, STATE_FILE));
+            IDLabFunctions.close();
 
-            /* Process all deletions, 1 is unseen thus deleted */
-            generated_iris = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, value, false, STATE_FILE);
-            assertNotNull(generated_iris);
-            assertTrue(generated_iris.size() == 1);
+            /* Marker 1 as seen */
+            assertNull(IDLabFunctions.implicitDelete(iri1, "pressure=1", false, STATE_FILE));
+            IDLabFunctions.close();
+
+            /* Process all deletions, iri2 should be marked as deleted */
+            List<String> generated = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, IDLabFunctions.MAGIC_MARKER, false, STATE_FILE);
+            IDLabFunctions.close();
+            assertNotNull(generated);
+            assertEquals(1, generated.size());
+            assertEquals(iri2, generated.get(0));
         }
 
         @Test
@@ -382,11 +386,11 @@ public class IDLabFunctionsTest {
 
             String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, null);
             assertNotNull(generated_iri);
+            IDLabFunctions.close();
 
             // check state dir
             final File stateFile = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state");
             assertTrue(stateFile.exists());
-            IDLabFunctions.close();
 
             // remove it
             if (!stateFile.delete()) {
@@ -402,11 +406,11 @@ public class IDLabFunctionsTest {
 
             String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, "__tmp");
             assertNotNull(generated_iri);
+            IDLabFunctions.close();
 
             // check state dir
             final File stateFile = new File(System.getProperty("java.io.tmpdir"), "unique_iri_state");
             assertTrue(stateFile.exists());
-            IDLabFunctions.close();
 
             // remove it
             if (!stateFile.delete()) {
@@ -422,11 +426,11 @@ public class IDLabFunctionsTest {
 
             String generated_iri = IDLabFunctions.generateUniqueIRI(iri, value, isUnique, "__working_dir");
             assertNotNull(generated_iri);
+            IDLabFunctions.close();
 
             // check state dir
             final File stateFile = new File(System.getProperty("user.dir"), "unique_iri_state");
             assertTrue(stateFile.exists());
-            IDLabFunctions.close();
 
             // remove it
             if (!stateFile.delete()) {
