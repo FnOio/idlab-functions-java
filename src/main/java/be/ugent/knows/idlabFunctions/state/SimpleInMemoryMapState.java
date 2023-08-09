@@ -108,8 +108,7 @@ public class SimpleInMemoryMapState implements MapState {
             }
             return newMap;
         });
-        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>());
-        values = value;
+        map.put(key, value);
     }
 
     @Override
@@ -138,7 +137,7 @@ public class SimpleInMemoryMapState implements MapState {
     }
 
     @Override
-    public Map<String, List<String>> getEntries(String stateFilePath) {
+    public synchronized Map<String, List<String>> getEntries(String stateFilePath) {
         Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
