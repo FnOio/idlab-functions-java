@@ -282,11 +282,13 @@ public class IDLabFunctionsTest {
         @Test
         public void explicitCreate() {
             String iri = "http://example.com/sensor2/";
-            String value = "id=2";
 
-            String generated_iri = IDLabFunctions.explicitCreate(iri, value, STATE_FILE);
+            String generated_iri = IDLabFunctions.explicitCreate(iri, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
+
+            generated_iri = IDLabFunctions.explicitCreate(iri, STATE_FILE);
+            assertNull(generated_iri);
         }
 
         @Test
@@ -298,19 +300,23 @@ public class IDLabFunctionsTest {
             String generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
+
+            generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+            assertNull(generated_iri);
         }
 
         @Test
         public void explicitUpdate() {
             String iri = "http://example.com/sensor2/";
-            String value = "id=2";
 
-            IDLabFunctions.explicitCreate(iri, value, STATE_FILE);
+            IDLabFunctions.explicitCreate(iri, STATE_FILE);
 
-            value = "id=4";
-            String generated_iri = IDLabFunctions.explicitUpdate(iri, value, STATE_FILE);
+            String generated_iri = IDLabFunctions.explicitUpdate(iri, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
+
+            generated_iri = IDLabFunctions.explicitUpdate(iri, STATE_FILE);
+            assertNull(generated_iri);
         }
 
         @Test
@@ -325,16 +331,21 @@ public class IDLabFunctionsTest {
             String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
+
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNull(generated_iri);
         }
 
         @Test
         public void explicitDelete() {
             String iri = "http://example.com/sensor2/";
-            String value = "id=2";
-            String generated_iri;
 
-            generated_iri = IDLabFunctions.explicitDelete(iri, value, STATE_FILE);
+            String generated_iri = IDLabFunctions.explicitDelete(iri, STATE_FILE);
+            assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
+
+            generated_iri = IDLabFunctions.explicitDelete(iri, STATE_FILE);
+            assertNull(generated_iri);
         }
 
         @Test

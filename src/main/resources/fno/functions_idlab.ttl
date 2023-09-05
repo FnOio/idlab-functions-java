@@ -188,7 +188,7 @@ idlab-fn:explicitCreate
     fno:name            "explicitCreate" ;
     rdfs:label          "explicitCreate" ;
     dcterms:description "Returns an IRI when an entity is explicitely created" ;
-    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
 idlab-fn:explicitUpdate
@@ -196,7 +196,7 @@ idlab-fn:explicitUpdate
     fno:name            "explicitUpdate" ;
     rdfs:label          "explicitUpdate" ;
     dcterms:description "Returns an IRI when an entity is explicitely updated" ;
-    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
 idlab-fn:explicitDelete
@@ -204,7 +204,7 @@ idlab-fn:explicitDelete
     fno:name            "explicitDelete" ;
     rdfs:label          "explicitDelete" ;
     dcterms:description "Returns an IRI when an entity is explicitely deleted" ;
-    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
 idlab-fn:toUpperCaseURL

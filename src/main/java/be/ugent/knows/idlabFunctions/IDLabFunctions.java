@@ -475,7 +475,7 @@ public class IDLabFunctions {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
         final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
-        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+        if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
         /* IRI in state, cannot be added anymore */
@@ -494,8 +494,6 @@ public class IDLabFunctions {
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -509,21 +507,16 @@ public class IDLabFunctions {
      *                             </ul>
      * @return The IRI is returned if the member was created, otherwise null.
      */
-    public static String explicitCreate(String iri, String watchedValueTemplate, String stateDirPathStr) {
+    public static String explicitCreate(String iri, String stateDirPathStr) {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_create_state");
-        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
-        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+        if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
         /* IRI in state, cannot be added anymore */
-        if (EXPLICIT_CREATE_STATE.hasKey(actualStateDirPathStr, iri))
-            return null;
-            /* IRI not in state, add it and return it. */
-        else {
-            EXPLICIT_CREATE_STATE.put(actualStateDirPathStr, iri, watchedPropertyString);
-            return iri;
-        }
+        /* Return IRI if the value is new, otherwise return NULL */
+        Optional<Integer> index = EXPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, "CREATED");
+        return index.isEmpty()? null: iri;
     }
 
     /**
@@ -558,7 +551,7 @@ public class IDLabFunctions {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_update_state");
         final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
-        if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+        if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
         /* IRI not in state, cannot be modified yet. Insert it */
@@ -579,8 +572,6 @@ public class IDLabFunctions {
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -594,12 +585,14 @@ public class IDLabFunctions {
      *                             </ul>
      * @return The IRI is returned if the member was updated, otherwise null.
      */
-    public static String explicitUpdate(String iri, String watchedValueTemplate, String stateDirPathStr) {
+    public static String explicitUpdate(String iri, String stateDirPathStr) {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_update_state");
-        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+            return null;
 
         /* Return IRI if the value is new, otherwise return NULL */
-        Optional<Integer> index = EXPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        Optional<Integer> index = EXPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, "MODIFIED");
         return index.isEmpty()? null: iri;
     }
 
@@ -635,6 +628,9 @@ public class IDLabFunctions {
         final String SEEN_ID = "SEEN";
         final String NOT_SEEN_ID = "NOT-SEEN";
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
+
+        if (iri == null)
+            return null;
 
         /* Process deletions when marker found */
         List<String> deleted = new ArrayList<>();
@@ -691,8 +687,6 @@ public class IDLabFunctions {
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -706,12 +700,14 @@ public class IDLabFunctions {
      *                             </ul>
      * @return The IRI is returned if the member was deleted, otherwise null.
      */
-    public static String explicitDelete(String iri, String watchedValueTemplate, String stateDirPathStr) {
+    public static String explicitDelete(String iri, String stateDirPathStr) {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_delete_state");
-        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
+        if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
+            return null;
 
         /* Return IRI if the value is new, otherwise return NULL */
-        Optional<Integer> index = EXPLICIT_DELETE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        Optional<Integer> index = EXPLICIT_DELETE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, "DELETED");
         return index.isEmpty()? null: iri;
     }
 
