@@ -49,6 +49,20 @@ public interface MapState extends AutoCloseable {
     Optional<Integer> putAndReturnIndex(final String stateFilePath, final String key, final String value);
 
     /**
+     * Loads or creates a new state map for the given state file path.
+     * Replaces the specified value to the associated values of the specified key in this map,
+     * (optional operation). If the value is not associated with the key, the index (i.e.,
+     * the number of values - 1) is returned. If the value is already associated, an empty
+     * value is returned.
+     * @param stateFilePath The path of this state map's persistence file.
+     * @param key           The key with which the specified value is to be associated.
+     * @param value         The value to be associated with the specified key.
+     * @return              If {@code value} was not previously associated with {@code key}: {@code Optional.empty()};
+     *                      else an Optional with the number of elements - 1 as value (i.e., the index)
+     */
+    Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value);
+
+    /**
      * Replaces the values of a key.
      *
      * @param key key with which the specified value is to be associated

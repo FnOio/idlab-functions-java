@@ -55,6 +55,16 @@ public class MapDBState implements MapState {
     }
 
     @Override
+    public Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value) {
+        synchronized (stateFileToMap) {
+            MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));
+            container.remove(key);
+            return container.putAndReturnIndex(key, value);
+        }
+    }
+
+
+    @Override
     public void replace(String stateFilePath, String key, List<String> value) {
         synchronized (stateFileToMap) {
             MapDBContainer container = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> new MapDBContainer(stateFilePath));

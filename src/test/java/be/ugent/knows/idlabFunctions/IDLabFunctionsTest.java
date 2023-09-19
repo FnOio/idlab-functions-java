@@ -309,8 +309,6 @@ public class IDLabFunctionsTest {
         public void explicitUpdate() {
             String iri = "http://example.com/sensor2/";
 
-            IDLabFunctions.explicitCreate(iri, STATE_FILE);
-
             String generated_iri = IDLabFunctions.explicitUpdate(iri, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
@@ -325,10 +323,29 @@ public class IDLabFunctionsTest {
             String value = "pressure=5";
             boolean isUnique = false;
 
-            IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNull(generated_iri);
 
             value = "pressure=6";
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNotNull(generated_iri);
+            assertTrue(generated_iri.contains(iri));
+
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNull(generated_iri);
+        }
+
+        @Test
+        public void implicitUpdateMultiple() {
+            String iri = "http://example.com/sensor2/";
+            String value = "pressure=5&timestamp=1";
+            boolean isUnique = false;
+
             String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            assertNull(generated_iri);
+
+            value = "pressure=5&timestamp2";
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
 

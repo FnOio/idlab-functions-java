@@ -483,7 +483,9 @@ public class IDLabFunctions {
             return null;
         /* IRI not in state, add it and return it. */
         else {
-            IMPLICIT_CREATE_STATE.put(actualStateDirPathStr, iri, watchedPropertyString);
+            List<String> values = new ArrayList<>();
+            values.add(watchedPropertyString);
+            IMPLICIT_CREATE_STATE.replace(actualStateDirPathStr, iri, values);
             return iri;
         }
     }
@@ -514,9 +516,15 @@ public class IDLabFunctions {
             return null;
 
         /* IRI in state, cannot be added anymore */
-        /* Return IRI if the value is new, otherwise return NULL */
-        Optional<Integer> index = EXPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, "CREATED");
-        return index.isEmpty()? null: iri;
+        if (EXPLICIT_CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+            return null;
+            /* IRI not in state, add it and return it. */
+        else {
+            List<String> values = new ArrayList<>();
+            values.add("CREATED");
+            EXPLICIT_CREATE_STATE.replace(actualStateDirPathStr, iri, values);
+            return iri;
+        }
     }
 
     /**
@@ -555,13 +563,20 @@ public class IDLabFunctions {
             return null;
 
         /* IRI not in state, cannot be modified yet. Insert it */
+        System.out.println(actualStateDirPathStr);
+        System.out.println(iri);
+        System.out.println(IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri));
         if (!IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
-            IMPLICIT_UPDATE_STATE.put(actualStateDirPathStr, iri, watchedPropertyString);
+            System.out.println("IRI " + iri + " not in state yet");
+            List<String> watchedProperties = new ArrayList<>();
+            watchedProperties.add(watchedPropertyString);
+            IMPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, watchedProperties);
             return null;
         }
 
         /* Return IRI if the value is new, otherwise return NULL */
-        Optional<Integer> index = IMPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        Optional<Integer> index = IMPLICIT_UPDATE_STATE.replaceAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
+        System.out.println("IRI " + iri + " returned index: " + index.toString());
         return index.isEmpty()? null: iri;
     }
 
@@ -591,9 +606,21 @@ public class IDLabFunctions {
         if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
-        /* Return IRI if the value is new, otherwise return NULL */
-        Optional<Integer> index = EXPLICIT_UPDATE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, "MODIFIED");
-        return index.isEmpty()? null: iri;
+        /*
+         * We don't need to check if the IRI was already created because these are unique for each update as the
+         * data source will provide explicitly which members are updated. We only need to filter out duplicates
+         * if we pull the same data from the data source
+         */
+
+        /* IRI already in state, cannot be modified anymore */
+        if (EXPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
+            return null;
+        } else {
+            List<String> values = new ArrayList<>();
+            values.add("MODIFIED");
+            EXPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, values);
+            return iri;
+        }
     }
 
     /**
@@ -707,8 +734,14 @@ public class IDLabFunctions {
             return null;
 
         /* Return IRI if the value is new, otherwise return NULL */
-        Optional<Integer> index = EXPLICIT_DELETE_STATE.putAndReturnIndex(actualStateDirPathStr, iri, "DELETED");
-        return index.isEmpty()? null: iri;
+        if (EXPLICIT_DELETE_STATE.hasKey(actualStateDirPathStr, iri)) {
+            return null;
+        } else {
+            List<String> values = new ArrayList<>();
+            values.add("DELETED");
+            EXPLICIT_DELETE_STATE.replace(actualStateDirPathStr, iri, values);
+            return iri;
+        }
     }
 
     /**

@@ -16,6 +16,24 @@ public class SimpleInMemoryMapState implements MapState {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
     private final static Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
 
+    private synchronized Map computeMap(final String stateFilePath) {
+        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
+            // first check if file exists and try to load map
+            File stateFile = new File(stateFilePath);
+            Map<String, List<String>> newMap = new HashMap<>();
+            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
+                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
+                    newMap = (Map<String, List<String>>)in.readObject();
+                } catch (IOException | ClassNotFoundException e) {
+                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
+                }
+            }
+            return newMap;
+        });
+
+        return map;
+    }
+
     /**
      * Loads or creates a new state map for the given state file path.
      * Associates the specified value with the specified key in this map
@@ -35,22 +53,11 @@ public class SimpleInMemoryMapState implements MapState {
      */
     @Override
     public synchronized String put(final String stateFilePath, final String key, final String value) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
-            // first check if file exists and try to load map
-            File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
-            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
-                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
-                }
-            }
-            return newMap;
-        });
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
         List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>());
         if (values.isEmpty()) {
             values.add(value);
+            map.put(key, values);
             return null;
         } else {
             // TODO: return laatste, en voeg niet toe als al in zit. Voorzie ook functie die index van value teruggeeft
@@ -59,6 +66,7 @@ public class SimpleInMemoryMapState implements MapState {
             } else {
                 String returnValue = values.get(values.size() - 1);
                 values.add(value);
+                map.put(key, values);
                 return returnValue;
             }
         }
@@ -66,94 +74,66 @@ public class SimpleInMemoryMapState implements MapState {
 
     @Override
     public synchronized Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
-            // first check if file exists and try to load map
-            File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
-            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
-                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
-                }
-            }
-            return newMap;
-        });
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
         List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
         if (values.isEmpty()) {
             values.add(value);
+            map.put(key, values);
             return Optional.of(0);
         } else {
             if (values.contains(value)) {
                 return Optional.empty();
             } else {
                 values.add(value);
+                map.put(key, values);
                 return Optional.of(values.size() - 1);
             }
         }
     }
 
     @Override
-    public void replace(String stateFilePath, String key, List<String> value) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
-            // first check if file exists and try to load map
-            File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
-            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
-                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
-                }
+    public synchronized Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value) {
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
+        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(1));
+        if (values.isEmpty()) {
+            values.add(value);
+            map.put(key, values);
+            return Optional.of(0);
+        } else {
+            if (values.contains(value)) {
+                return Optional.empty();
+            } else {
+                List<String> newValues = new ArrayList<>();
+                newValues.add(value);
+                map.put(key, newValues);
+                return Optional.of(newValues.size() - 1);
             }
-            return newMap;
-        });
+        }
+    }
+
+    @Override
+    public void replace(String stateFilePath, String key, List<String> value) {
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
         map.put(key, value);
     }
 
     @Override
     public boolean hasKey(String stateFilePath, String key) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
-            // first check if file exists and try to load map
-            File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
-            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
-                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
-                }
-            }
-
-            return newMap;
-        });
-
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
         List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
-
-        if (values.isEmpty())
-            return false;
-
-        return true;
+        return values.isEmpty()? false: true;
     }
 
     @Override
     public synchronized Map<String, List<String>> getEntries(String stateFilePath) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
-            // first check if file exists and try to load map
-            File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
-            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
-                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
-                }
-            }
-
-            return newMap;
-        });
-
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
         return map;
+    }
+
+    @Override
+    public void remove(String stateFilePath, String key) {
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
+        map.remove(key);
     }
 
     /**
@@ -199,23 +179,5 @@ public class SimpleInMemoryMapState implements MapState {
         } else {
             return 0;
         }
-    }
-
-    @Override
-    public void remove(String stateFilePath, String key) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
-            // first check if file exists and try to load map
-            File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
-            if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
-                try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
-                }
-            }
-            return newMap;
-        });
-        map.remove(key);
     }
 }
