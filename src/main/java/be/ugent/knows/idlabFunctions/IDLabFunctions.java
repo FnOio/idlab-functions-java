@@ -433,6 +433,12 @@ public class IDLabFunctions {
      */
     public static String generateUniqueIRI(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
         if (isUnique == null || !isUnique) {
+            /* Required parameter */
+            if (watchedValueTemplate == null) {
+                logger.error("Watched value template is a required parameter but was not provided");
+                return null;
+            }
+
             final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_iri_state");
             final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
             Optional<Integer> indexOpt = UNIQUE_IRI_STATE.putAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
@@ -450,14 +456,6 @@ public class IDLabFunctions {
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
-     *                             {@code true}, this function returns the value of the {@code template} parameters.
-     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
-     *                             same value as the previous call then there's no update and this function returns {@code null}.
-     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
-     *                             this function returns an IRI composed of the template + a unique string.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -471,9 +469,8 @@ public class IDLabFunctions {
      *                             </ul>
      * @return The IRI is returned if the member was created, otherwise null.
      */
-    public static String implicitCreate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+    public static String implicitCreate(String iri, String stateDirPathStr) {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
-        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
         if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
@@ -484,7 +481,7 @@ public class IDLabFunctions {
         /* IRI not in state, add it and return it. */
         else {
             List<String> values = new ArrayList<>();
-            values.add(watchedPropertyString);
+            values.add("CREATED");
             IMPLICIT_CREATE_STATE.replace(actualStateDirPathStr, iri, values);
             return iri;
         }
@@ -534,12 +531,6 @@ public class IDLabFunctions {
      * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
      *                             (set by the {@code isUnique} parameter) then this function just returns the template.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
-     *                             {@code true}, this function returns the value of the {@code template} parameters.
-     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
-     *                             same value as the previous call then there's no update and this function returns {@code null}.
-     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
-     *                             this function returns an IRI composed of the template + a unique string.
      * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
      *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
@@ -555,7 +546,13 @@ public class IDLabFunctions {
      *                             </ul>
      * @return The IRI is returned if the member was updated, otherwise null.
      */
-    public static String implicitUpdate(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+    public static String implicitUpdate(String iri, String watchedValueTemplate, String stateDirPathStr) {
+        /* Required parameter */
+        if (watchedValueTemplate == null) {
+            logger.error("Watched value template is a required parameter but was not provided");
+            return null;
+        }
+
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_update_state");
         final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
 
@@ -650,7 +647,7 @@ public class IDLabFunctions {
      *                             </ul>
      * @return List of IRIs is returned of deleted members. An empty list indicates no deletions.
      */
-    public static List<String> implicitDelete(String iri, String watchedValueTemplate, Boolean isUnique, String stateDirPathStr) {
+    public static List<String> implicitDelete(String iri, String stateDirPathStr) {
         List<String> iris = new ArrayList<>();
         final String SEEN_ID = "SEEN";
         final String NOT_SEEN_ID = "NOT-SEEN";

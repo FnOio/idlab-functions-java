@@ -294,14 +294,12 @@ public class IDLabFunctionsTest {
         @Test
         public void implicitCreate() {
             String iri = "http://example.com/sensor2/";
-            String value = "pressure=5";
-            boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.implicitCreate(iri, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
 
-            generated_iri = IDLabFunctions.implicitCreate(iri, value, isUnique, STATE_FILE);
+            generated_iri = IDLabFunctions.implicitCreate(iri, STATE_FILE);
             assertNull(generated_iri);
         }
 
@@ -321,17 +319,16 @@ public class IDLabFunctionsTest {
         public void implicitUpdate() {
             String iri = "http://example.com/sensor2/";
             String value = "pressure=5";
-            boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, STATE_FILE);
             assertNull(generated_iri);
 
             value = "pressure=6";
-            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
 
-            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, STATE_FILE);
             assertNull(generated_iri);
         }
 
@@ -339,17 +336,16 @@ public class IDLabFunctionsTest {
         public void implicitUpdateMultiple() {
             String iri = "http://example.com/sensor2/";
             String value = "pressure=5&timestamp=1";
-            boolean isUnique = false;
 
-            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            String generated_iri = IDLabFunctions.implicitUpdate(iri, value, STATE_FILE);
             assertNull(generated_iri);
 
             value = "pressure=5&timestamp2";
-            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, STATE_FILE);
             assertNotNull(generated_iri);
             assertTrue(generated_iri.contains(iri));
 
-            generated_iri = IDLabFunctions.implicitUpdate(iri, value, isUnique, STATE_FILE);
+            generated_iri = IDLabFunctions.implicitUpdate(iri, value, STATE_FILE);
             assertNull(generated_iri);
         }
 
@@ -371,21 +367,21 @@ public class IDLabFunctionsTest {
             String iri2 = "http://example.com/sensor2/";
 
             /* Mark 2 members as seen */
-            assertNull(IDLabFunctions.implicitDelete(iri1, "pressure=1", false, STATE_FILE));
+            assertNull(IDLabFunctions.implicitDelete(iri1, STATE_FILE));
             IDLabFunctions.close();
-            assertNull(IDLabFunctions.implicitDelete(iri2, "pressure=2", false, STATE_FILE));
+            assertNull(IDLabFunctions.implicitDelete(iri2, STATE_FILE));
             IDLabFunctions.close();
 
             /* Process all deletions, none should be marked as deleted */
-            assertNull(IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, IDLabFunctions.MAGIC_MARKER, false, STATE_FILE));
+            assertNull(IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, STATE_FILE));
             IDLabFunctions.close();
 
             /* Marker 1 as seen */
-            assertNull(IDLabFunctions.implicitDelete(iri1, "pressure=1", false, STATE_FILE));
+            assertNull(IDLabFunctions.implicitDelete(iri1, STATE_FILE));
             IDLabFunctions.close();
 
             /* Process all deletions, iri2 should be marked as deleted */
-            List<String> generated = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, IDLabFunctions.MAGIC_MARKER, false, STATE_FILE);
+            List<String> generated = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, STATE_FILE);
             IDLabFunctions.close();
             assertNotNull(generated);
             assertEquals(1, generated.size());
