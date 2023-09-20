@@ -554,11 +554,7 @@ public class IDLabFunctions {
             return null;
 
         /* IRI not in state, cannot be modified yet. Insert it */
-        System.out.println(actualStateDirPathStr);
-        System.out.println(iri);
-        System.out.println(IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri));
         if (!IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
-            System.out.println("IRI " + iri + " not in state yet");
             List<String> watchedProperties = new ArrayList<>();
             watchedProperties.add(watchedPropertyString);
             IMPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, watchedProperties);
@@ -567,7 +563,6 @@ public class IDLabFunctions {
 
         /* Return IRI if the value is new, otherwise return NULL */
         Optional<Integer> index = IMPLICIT_UPDATE_STATE.replaceAndReturnIndex(actualStateDirPathStr, iri, watchedPropertyString);
-        System.out.println("IRI " + iri + " returned index: " + index.toString());
         return index.isEmpty()? null: iri;
     }
 
