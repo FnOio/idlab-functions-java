@@ -164,7 +164,7 @@ idlab-fn:implicitCreate
     fno:name            "implicitCreate" ;
     rdfs:label          "implicitCreate" ;
     dcterms:description "Returns an IRI when an entity is implicitely created" ;
-    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
 idlab-fn:implicitUpdate
@@ -172,7 +172,7 @@ idlab-fn:implicitUpdate
     fno:name            "implicitUpdate" ;
     rdfs:label          "implicitUpdate" ;
     dcterms:description "Returns an IRI when an entity is implicitely updated" ;
-    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
 idlab-fn:implicitDelete
@@ -180,7 +180,7 @@ idlab-fn:implicitDelete
     fno:name            "implicitDelete" ;
     rdfs:label          "implicitDelete" ;
     dcterms:description "Returns an IRI when an entity is implicitely deleted" ;
-    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_listOut ) .
 
 idlab-fn:explicitCreate

@@ -453,9 +453,7 @@ public class IDLabFunctions {
     /**
      * Detect implicit created members by checking if their IRI exists in the state or not.
      *
-     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
-     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
-     *                             If not, a unique string will be appended to the returned IRI.
+     * @param iri                  The IRI template from which an IRI should be generated.
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -490,9 +488,7 @@ public class IDLabFunctions {
     /**
      * Detect explicit created members by checking if their IRI exists in the state or not.
      *
-     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
-     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
-     *                             If not, a unique string will be appended to the returned IRI.
+     * @param iri                  The IRI template from which an IRI should be generated.
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -528,9 +524,7 @@ public class IDLabFunctions {
      * Detect implicit modified members by checking if their IRI exists in the state or not and if their properties
      * were modified.
      *
-     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
-     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
-     *                             If not, a unique string will be appended to the returned IRI.
+     * @param iri                  The IRI template from which an IRI should be generated.
      * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
      *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
@@ -581,9 +575,7 @@ public class IDLabFunctions {
      * Detect explicit modified members by checking if their IRI exists in the state or not and if their properties
      * were modified.
      *
-     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
-     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
-     *                             If not, a unique string will be appended to the returned IRI.
+     * @param iri                  The IRI template from which an IRI should be generated.
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -623,17 +615,8 @@ public class IDLabFunctions {
     /**
      * Detect implicit deleted members by checking if their IRI is not present anymore in the current version.
      *
-     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
-     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
+     * @param iri                  The IRI template from which an IRI should be generated.
      *                             If not, a unique string will be appended to the returned IRI.
-     * @param isUnique             A flag to indicate whether the given template already creates a unique IRI. If set to
-     *                             {@code true}, this function returns the value of the {@code template} parameters.
-     *                             If set to {@code false}, then {@code watchedValueTemplate} is checked: if it has the
-     *                             same value as the previous call then there's no update and this function returns {@code null}.
-     *                             If the value of {@code watchedValueTemplate} differs from the previous call, then
-     *                             this function returns an IRI composed of the template + a unique string.
-     * @param watchedValueTemplate The template string containing the key-value pairs of properties being watched. Only
-     *                             used if the template is not unique (set by the {@code isUnique} parameter).
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
@@ -708,9 +691,7 @@ public class IDLabFunctions {
     /**
      * Detect explicit deleted members by checking if their IRI is not present anymore in the current version.
      *
-     * @param iri                  The IRI from which a unique IRI should be generated. If it is guaranteed to be unique
-     *                             (set by the {@code isUnique} parameter) then this function just returns the template.
-     *                             If not, a unique string will be appended to the returned IRI.
+     * @param iri                  The IRI template from which an IRI should be generated.
      * @param stateDirPathStr      String representation of the file path in which the state of the function
      *                             will be stored. It can have four kinds of values:
      *                             <ul>
