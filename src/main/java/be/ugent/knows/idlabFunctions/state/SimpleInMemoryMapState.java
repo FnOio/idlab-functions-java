@@ -158,7 +158,7 @@ public class SimpleInMemoryMapState implements MapState {
     @Override
     public synchronized void saveAllState() {
         stateFileToMap.forEach((stateFilePath, stateMap) -> {
-            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(stateFilePath, false))) {
+            try (ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(stateFilePath, false)))) {
                 out.writeObject(stateMap);
             } catch (IOException e) {
                 log.warn("Cannot save state map to {}", stateFilePath);
