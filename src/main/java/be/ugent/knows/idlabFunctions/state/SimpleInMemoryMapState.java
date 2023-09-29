@@ -16,7 +16,7 @@ public class SimpleInMemoryMapState implements MapState {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
     private final static Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
 
-    private synchronized Map computeMap(final String stateFilePath) {
+    private synchronized Map<String, List<String>> computeMap(final String stateFilePath) {
         Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
@@ -112,13 +112,13 @@ public class SimpleInMemoryMapState implements MapState {
     }
 
     @Override
-    public void replace(String stateFilePath, String key, List<String> value) {
+    public synchronized void replace(String stateFilePath, String key, List<String> value) {
         Map<String, List<String>> map = this.computeMap(stateFilePath);
         map.put(key, value);
     }
 
     @Override
-    public boolean hasKey(String stateFilePath, String key) {
+    public synchronized boolean hasKey(String stateFilePath, String key) {
         Map<String, List<String>> map = this.computeMap(stateFilePath);
         List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
         return values.isEmpty()? false: true;
@@ -131,7 +131,7 @@ public class SimpleInMemoryMapState implements MapState {
     }
 
     @Override
-    public void remove(String stateFilePath, String key) {
+    public synchronized void remove(String stateFilePath, String key) {
         Map<String, List<String>> map = this.computeMap(stateFilePath);
         map.remove(key);
     }
