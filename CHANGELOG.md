@@ -2,15 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
 
+### Removed
+- Support for MapDB as state backend.
+
 ### Fixed
 - Parameter types of `lookup` functions in `functions_idlab.ttl`.
 - Update dependencies on `json-path` and `opencsv` 
-- SimpleInMemoryMapState: use BufferedOutputStream to write resulting in big performance gain.
+- SimpleInMemoryMapState: 
+  - use BufferedOutputStream to write resulting in big performance gain.
+  - make a bit more type- and thread safe
 - Cache resolving of state file path to improve performance.
 
 ## [1.1.3] - 2023-09-26
