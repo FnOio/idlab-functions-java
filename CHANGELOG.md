@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Parameter types of `lookup` functions in `functions_idlab.ttl`.
 - Update dependencies on `json-path` and `opencsv` 
+- SimpleInMemoryMapState: use BufferedOutputStream to write resulting in big performance gain.
+- Cache resolving of state file path to improve performance.
 
 ## [1.1.3] - 2023-09-26
 
@@ -17,8 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - state: SimpleInMemoryMapState: use BufferedOutputStream for writing.
 
 ## [1.1.2] - 2023-09-19
-
-### Fixed
 - IDLabFunctions: drop debug prints
 - IDLabFunctions: fix function signature and docs
 
@@ -134,7 +134,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code extracted from [RMLMapper](https://github.com/RMLio/rmlmapper-java)
 
+<<<<<<< HEAD
 [1.1.3]: https://github.com/FnOio/idlab-functions-java/compare/v1.1.2...v1.1.3
+=======
+>>>>>>> 7451ddf (Cache state file path resolving)
 [1.1.2]: https://github.com/FnOio/idlab-functions-java/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/FnOio/idlab-functions-java/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/FnOio/idlab-functions-java/compare/v1.0.0...v1.1.0

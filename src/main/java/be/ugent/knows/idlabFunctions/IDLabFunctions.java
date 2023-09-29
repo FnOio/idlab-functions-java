@@ -48,6 +48,8 @@ public class IDLabFunctions {
     public final static String MAGIC_MARKER = "!@#$%^&()_+";
     public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26%28%29_%2B";
 
+    private final static Map<String, String> STATE_FILE_PATH_CACHE = new HashMap<>();
+
     // used by the lookup function
     private static final Map<String, String> LOOKUP_STATE_MAP = new HashMap<>();
     private static final Map<SearchParameters, String> MULTIPLE_LOOKUP_STATE_MAP = new HashMap<>();
@@ -72,7 +74,15 @@ public class IDLabFunctions {
      * @param state_file        The file where state is kept within {@code stateDirPathStr}.
      * @return the resolved state dir path
      */
-    private static String resolveStateDirPath(String stateDirPathStr, String state_file) {
+    private static String resolveStateDirPath(final String stateDirPathStr, final String state_file) {
+
+        // first check if in cache
+        final String result = STATE_FILE_PATH_CACHE.get(stateDirPathStr);
+        if (result != null) {
+            return result;
+        }
+
+        // not in cache, do actual resolve
         final String actualStateFilePathStr;
         final String checkedStateDirPathStr;
         if (stateDirPathStr == null || stateDirPathStr.isEmpty()) {
@@ -99,6 +109,7 @@ public class IDLabFunctions {
             actualStateFilePathStr = new File(stateDir, new File(checkedStateDirPathStr).getName()).getPath();
         }
         logger.debug("actualStateFilePathStr = '{}'", actualStateFilePathStr);
+        STATE_FILE_PATH_CACHE.put(stateDirPathStr, actualStateFilePathStr);
         return actualStateFilePathStr;
     }
 
@@ -394,6 +405,8 @@ public class IDLabFunctions {
             EXPLICIT_UPDATE_STATE.close();
             EXPLICIT_DELETE_STATE.close();
             UNIQUE_IRI_STATE.close();
+            LOOKUP_STATE_MAP.clear();
+            STATE_FILE_PATH_CACHE.clear();
         } catch (Exception e) {
             logger.warn("Cannot close state.", e);
         }
