@@ -1,6 +1,5 @@
 package be.ugent.knows.idlabFunctions;
 
-import be.ugent.knows.idlabFunctions.state.MapDBState;
 import be.ugent.knows.idlabFunctions.state.MapState;
 import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
 import be.ugent.knows.util.Cache;

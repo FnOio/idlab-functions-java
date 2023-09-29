@@ -3,22 +3,16 @@ package be.ugent.knows.idlabFunctions.state;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,23 +25,6 @@ public class StateTest {
     public final static Logger log = LoggerFactory.getLogger(StateTest.class);
     private final static File tmpStateFile1 = new File(System.getProperty("java.io.tmpdir"), "tmpState1");
     private final static File tmpStateFile2 = new File(System.getProperty("java.io.tmpdir"), "tmpState2");
-
-    public static Stream<Arguments> stateAndNrCombinations() {
-        List<MapState> states = List.of(new SimpleInMemoryMapState(), new MapDBState());
-        List<Integer> entries = List.of(100, 1000, 10000);
-        List<Arguments> arguments = new ArrayList<>();
-        states.forEach(state ->{
-            entries.forEach(entry -> arguments.add(Arguments.of(state, entry)));
-        });
-        return arguments.stream();
-    }
-
-    public static Stream<Arguments> states() {
-        return Stream.of(
-                Arguments.of(new SimpleInMemoryMapState()),
-                Arguments.of(new MapDBState())
-        );
-    }
 
     //@BeforeEach
     @AfterEach
@@ -65,10 +42,9 @@ public class StateTest {
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    public void testSingleThreadedState(boolean isSimple) throws Exception {
-        try (MapState state = isSimple ? new SimpleInMemoryMapState() : new MapDBState()) {
+    @Test
+    public void testSingleThreadedState() throws Exception {
+        try (MapState state = new SimpleInMemoryMapState()) {
             // first create a state by putting something in it
             String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
             assertNull(previous);
@@ -91,7 +67,7 @@ public class StateTest {
         // at this point the state closes
 
         // now re-load state
-        try (MapState state = isSimple ? new SimpleInMemoryMapState() : new MapDBState()) {
+        try (MapState state = new SimpleInMemoryMapState()) {
             String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
             assertEquals("do not change anymore", previous);
 
@@ -100,135 +76,123 @@ public class StateTest {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource("states")
-    public void testMultiThreadedState(MapState state) throws Exception {
-        final String stateFile1 = tmpStateFile1.getPath();
-        final String stateFile2 = tmpStateFile2.getPath();
-        ExecutorService service = Executors.newFixedThreadPool(8);
-
-        final Random r = new Random();
-        for (int i = 0; i < 10000; i++) {
-            service.submit(() -> {
-                int nr = r.nextInt(2);
-                String sFile = nr % 2 == 0 ? stateFile1 : stateFile2;
-                String key = nr % 2 == 0 ? "Hello" : "Bye";
-                String value = nr % 2 == 0 ? "moon" : "world";
-                String oldValue = state.put(sFile, key, value);
-                assertTrue(oldValue == null || oldValue.equals("world") || oldValue.equals("moon"));
-            });
-        }
-        service.shutdown();
-        if (!service.awaitTermination(100, TimeUnit.SECONDS)) {
-            log.warn("Waiting for executor to run all tasks failed for some reason... Never mind.");
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("stateAndNrCombinations")
-    public void testManyEntriesSingleThread(MapState state, int nrEntries) {
-        System.out.println("state: " + state.getClass().getSimpleName() + "; nr entries: " + nrEntries / 1000 + " K");
-        final String stateFileString = tmpStateFile1.getPath();
-        long charsWritten = 0;
-        final Random r = new Random();
-        long startTime = System.currentTimeMillis();
-        for (int i = 0; i < nrEntries; i++) {
-            long longValue = r.nextLong();
-            String key = Long.toHexString(longValue);
-            String binaryValue = Long.toString(longValue, 2);
-            state.put(stateFileString, key, binaryValue);
-            charsWritten += key.length();
-            charsWritten += binaryValue.length();
-        }
-        long endTime = System.currentTimeMillis();
-        System.out.println("charsWritten = " + charsWritten);
-        System.out.println("time (ms) = " + (endTime - startTime));
-        state.deleteAllState();
-    }
-
-    @ParameterizedTest
-    @MethodSource("stateAndNrCombinations")
-    public void testManyEntriesParallel(MapState state, int nrEntries) throws InterruptedException {
-        System.out.println("state: " + state.getClass().getSimpleName() + "; nr entries: " + nrEntries / 1000 + " K");
+    @Test
+    public void testMultiThreadedState() throws Exception {
         final String stateFile1 = tmpStateFile1.getPath();
         final String stateFile2 = tmpStateFile2.getPath();
         final ExecutorService service = Executors.newFixedThreadPool(8);
-        final Random r = new Random();
-        long startTime = System.currentTimeMillis();
-        for (int i = 0; i < nrEntries; i++) {
-            service.submit(() -> {
-                long longValue = r.nextInt();
-                String sFile = longValue % 2 == 0 ? stateFile1 : stateFile2;
+        try (final MapState state = new SimpleInMemoryMapState()) {
+
+            final Random r = new Random();
+            for (int i = 0; i < 10000; i++) {
+                service.submit(() -> {
+                    int nr = r.nextInt(2);
+                    String sFile = nr % 2 == 0 ? stateFile1 : stateFile2;
+                    String key = nr % 2 == 0 ? "Hello" : "Bye";
+                    String value = nr % 2 == 0 ? "moon" : "world";
+                    String oldValue = state.put(sFile, key, value);
+                    assertTrue(oldValue == null || oldValue.equals("world") || oldValue.equals("moon"));
+                });
+            }
+            service.shutdown();
+            if (!service.awaitTermination(100, TimeUnit.SECONDS)) {
+                log.warn("Waiting for executor to run all tasks failed for some reason... Never mind.");
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1000, 10000, 100000, 1000000})
+    public void testManyEntriesSingleThread(int nrEntries) throws Exception {
+        try (final MapState state = new SimpleInMemoryMapState()) {
+            System.out.println("nr entries: " + nrEntries / 1000 + " K");
+            final String stateFileString = tmpStateFile1.getPath();
+            long charsWritten = 0;
+            final Random r = new Random();
+            long startTime = System.currentTimeMillis();
+            for (int i = 0; i < nrEntries; i++) {
+                long longValue = r.nextLong();
                 String key = Long.toHexString(longValue);
                 String binaryValue = Long.toString(longValue, 2);
-                state.putAndReturnIndex(sFile, key, binaryValue);
-            });
+                state.put(stateFileString, key, binaryValue);
+                charsWritten += key.length();
+                charsWritten += binaryValue.length();
+            }
+            long endTime = System.currentTimeMillis();
+            System.out.println("charsWritten = " + charsWritten);
+            System.out.println("time (ms) = " + (endTime - startTime));
         }
-        service.shutdown();
-        if (!service.awaitTermination(100, TimeUnit.SECONDS)) {
-            log.warn("Waiting for executor to run all tasks failed for some reason... Never mind.");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1000, 10000, 100000, 1000000})
+    public void testManyEntriesParallel(int nrEntries) throws Exception {
+        System.out.println("nr entries: " + nrEntries / 1000 + " K");
+        final String stateFile1 = tmpStateFile1.getPath();
+        final String stateFile2 = tmpStateFile2.getPath();
+        final ExecutorService service = Executors.newFixedThreadPool(8);
+
+        try (final MapState state = new SimpleInMemoryMapState()) {
+            final Random r = new Random();
+            long startTime = System.currentTimeMillis();
+            for (int i = 0; i < nrEntries; i++) {
+                service.submit(() -> {
+                    long longValue = r.nextInt();
+                    String sFile = longValue % 2 == 0 ? stateFile1 : stateFile2;
+                    String key = Long.toHexString(longValue);
+                    String binaryValue = Long.toString(longValue, 2);
+                    state.putAndReturnIndex(sFile, key, binaryValue);
+                });
+            }
+            service.shutdown();
+            if (!service.awaitTermination(100, TimeUnit.SECONDS)) {
+                log.warn("Waiting for executor to run all tasks failed for some reason... Never mind.");
+            }
+            long endTime = System.currentTimeMillis();
+            System.out.println("time (ms) = " + (endTime - startTime));
         }
-        long endTime = System.currentTimeMillis();
-        System.out.println("time (ms) = " + (endTime - startTime));
-        state.deleteAllState();
-    }
-
-    @ParameterizedTest
-    @MethodSource("states")
-    public void testPutAndReturnIndex(MapState state) {
-        Optional<Integer> indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
-        assertTrue(indexOpt.isPresent());
-        assertEquals(0, indexOpt.get());
-
-        indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "b");
-        assertTrue(indexOpt.isPresent());
-        assertEquals(1, indexOpt.get());
-
-        indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
-        assertFalse(indexOpt.isPresent());
-
-        state.deleteAllState();
-    }
-
-    @ParameterizedTest
-    @MethodSource("states")
-    public void testSaveAllState(MapState state) {
-        // first create a state by putting something in it
-        String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
-        assertNull(previous);
-
-        state.saveAllState();
-
-        assertTrue(tmpStateFile1.exists());
-        state.deleteAllState();
-    }
-
-    @ParameterizedTest
-    @MethodSource("states")
-    public void testDeleteAllState(MapState state) {
-        // first create a state by putting something in it
-        String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
-        assertNull(previous);
-
-        state.deleteAllState();
-
-        assertFalse(tmpStateFile1.exists());
-        state.deleteAllState();
     }
 
     @Test
-    public void testNonExistingParentStatePath() throws Exception {
-        String stateFile = Paths.get(System.getProperty("java.io.tmpdir"), "somedir", "tmpState").toAbsolutePath().toString();
-        try (MapState state = new MapDBState()) {
-            state.put(stateFile, "key", "value");
-            assertTrue(new File(stateFile).exists());
-        } finally {
-            File stateFileFile = new File(stateFile);
-            if (stateFileFile.delete()) {
-                if (!stateFileFile.getParentFile().delete()) {
-                    fail("Could not delete state file " + stateFileFile);
-                }
-            }
+    public void testPutAndReturnIndex() throws Exception {
+        try (MapState state = new SimpleInMemoryMapState()) {
+            Optional<Integer> indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
+            assertTrue(indexOpt.isPresent());
+            assertEquals(0, indexOpt.get());
+
+            indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "b");
+            assertTrue(indexOpt.isPresent());
+            assertEquals(1, indexOpt.get());
+
+            indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
+            assertFalse(indexOpt.isPresent());
+        }
+    }
+
+    @Test
+    public void testSaveAllState() throws Exception {
+        // first create a state by putting something in it
+        try (MapState state = new SimpleInMemoryMapState()) {
+            String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
+            assertNull(previous);
+
+            state.saveAllState();
+
+            assertTrue(tmpStateFile1.exists());
+        }
+    }
+
+    @Test
+    public void testDeleteAllState() throws Exception {
+        try (MapState state = new SimpleInMemoryMapState()) {
+            // first create a state by putting something in it
+            String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
+            assertNull(previous);
+
+            state.deleteAllState();
+
+            assertFalse(tmpStateFile1.exists());
+            state.deleteAllState();
         }
     }
 
@@ -238,9 +202,9 @@ public class StateTest {
         final String stateFile1 = tmpStateFile1.getPath();
         final ExecutorService service = Executors.newFixedThreadPool(8);
 
-        long startTime = 0;
+            long startTime = 0;
 
-        try (final MapState state = new SimpleInMemoryMapState()) {
+            try (final MapState state = new SimpleInMemoryMapState()) {
 
             // populate the state with a lot of random stuff
             final Random r = new Random();

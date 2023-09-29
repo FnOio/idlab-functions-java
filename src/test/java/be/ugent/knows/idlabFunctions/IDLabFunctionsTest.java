@@ -1,8 +1,5 @@
 package be.ugent.knows.idlabFunctions;
 
-import be.ugent.knows.idlabFunctions.state.MapDBState;
-import be.ugent.knows.idlabFunctions.state.MapState;
-import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
 import com.opencsv.exceptions.CsvValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
