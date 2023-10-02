@@ -159,6 +159,22 @@ idlab-fn:generateUniqueIRI
     fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:createUniqueIRI
+    a                   fno:Function ;
+    fno:name            "createUniqueIRI" ;
+    rdfs:label          "createUniqueIRI" ;
+    dcterms:description "Creates a unique versioned IRI for first time entities" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
+idlab-fn:updateUniqueIRI
+    a                   fno:Function ;
+    fno:name            "updateUniqueIRI" ;
+    rdfs:label          "updateUniqueIRI" ;
+    dcterms:description "Updates a unique versioned IRI by watching the given property value" ;
+    fno:expects         ( idlab-fn:_iri idlab-fn:_watchedProperty idlab-fn:_unique idlab-fn:_state ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
 idlab-fn:implicitCreate
     a                   fno:Function ;
     fno:name            "implicitCreate" ;
@@ -566,6 +582,18 @@ idlab-fn-m:generateUniqueIRIMapping
     fno:function		idlab-fn:generateUniqueIRI;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "generateUniqueIRI" ] .
+
+idlab-fn-m:createUniqueIRIMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:createUniqueIRI;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "createUniqueIRI" ] .
+
+idlab-fn-m:updateUniqueIRIMapping
+	a                   fno:Mapping ;
+    fno:function		idlab-fn:updateUniqueIRI;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "updateUniqueIRI" ] .
 
 idlab-fn-m:implicitCreateMapping
 	a                   fno:Mapping ;
