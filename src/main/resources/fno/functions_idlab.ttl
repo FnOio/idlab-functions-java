@@ -445,14 +445,14 @@ idlab-fn:_fromColumn
     a             fno:Parameter;
     fno:name      "index of the fromColumn";
     rdfs:label    "index of the fromColumn";
-    fno:type      xsd:integer ;
+    fno:type      xsd:int ;
     fno:predicate idlab-fn:fromColumn .
 
 idlab-fn:_toColumn
     a             fno:Parameter;
     fno:name      "index of the toColumn";
     rdfs:label    "index of the toColumn";
-    fno:type      xsd:integer ;
+    fno:type      xsd:int ;
     fno:predicate idlab-fn:toColumn .
 
 #####################
