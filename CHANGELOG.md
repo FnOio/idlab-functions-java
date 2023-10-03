@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Fixed
-- Parameter types of `lookup` functions in `functions_idlab.ttl`. 
+- Parameter types of `lookup` functions in `functions_idlab.ttl`.
+- Update dependencies on `json-path` and `opencsv` 
 
 ## [1.1.3] - 2023-09-26
 

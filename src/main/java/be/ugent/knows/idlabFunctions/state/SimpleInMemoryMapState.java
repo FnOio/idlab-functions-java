@@ -54,7 +54,7 @@ public class SimpleInMemoryMapState implements MapState {
     @Override
     public synchronized String put(final String stateFilePath, final String key, final String value) {
         Map<String, List<String>> map = this.computeMap(stateFilePath);
-        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>());
+        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>());  // TODO perf: verander in map (ten koste van memory)
         if (values.isEmpty()) {
             values.add(value);
             map.put(key, values);

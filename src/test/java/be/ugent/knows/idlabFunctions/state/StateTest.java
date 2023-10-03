@@ -152,8 +152,7 @@ public class StateTest {
         System.out.println("state: " + state.getClass().getSimpleName() + "; nr entries: " + nrEntries / 1000 + " K");
         final String stateFile1 = tmpStateFile1.getPath();
         final String stateFile2 = tmpStateFile2.getPath();
-        ExecutorService service = Executors.newFixedThreadPool(8);
-
+        final ExecutorService service = Executors.newFixedThreadPool(8);
         final Random r = new Random();
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < nrEntries; i++) {
@@ -231,5 +230,38 @@ public class StateTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void timeSaveState() throws Exception {
+        final int nrEntries = 1000000;
+        final String stateFile1 = tmpStateFile1.getPath();
+        final ExecutorService service = Executors.newFixedThreadPool(8);
+
+        long startTime = 0;
+
+        try (final MapState state = new SimpleInMemoryMapState()) {
+
+            // populate the state with a lot of random stuff
+            final Random r = new Random();
+            for (int i = 0; i < nrEntries; i++) {
+                service.submit(() -> {
+                    long longValue = r.nextInt();
+                    String key = Long.toHexString(longValue);
+                    String binaryValue = Long.toString(longValue, 2);
+                    state.putAndReturnIndex(stateFile1, key, binaryValue);
+                });
+            }
+            service.shutdown();
+            if (!service.awaitTermination(100, TimeUnit.SECONDS)) {
+                log.warn("Waiting for executor to run all tasks failed for some reason... Never mind.");
+            }
+
+            // start timing; the try-with-resources will auto-close and save the state.
+            System.out.println("Saving state...");
+            startTime = System.currentTimeMillis();
+        }
+        long endTime = System.currentTimeMillis();
+        System.out.println("time (ms) = " + (endTime - startTime));
     }
 }
