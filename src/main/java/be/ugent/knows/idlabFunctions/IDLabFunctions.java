@@ -671,17 +671,15 @@ public class IDLabFunctions {
             return null;
         }
 
-        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_update_state");
-        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
-
         if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_update_state");
+        final String watchedPropertyString = sortWatchedProperties(watchedValueTemplate);
+
         /* IRI not in state, cannot be modified yet. Insert it */
         if (!IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
-            List<String> watchedProperties = new ArrayList<>();
-            watchedProperties.add(watchedPropertyString);
-            IMPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, watchedProperties);
+            IMPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, Collections.singletonList(watchedPropertyString));
             return null;
         }
 
