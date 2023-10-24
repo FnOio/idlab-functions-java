@@ -42,7 +42,7 @@ public class IDLabFunctions {
     private final static SetState IMPLICIT_CREATE_STATE = new SimpleInMemorySetState();
     private final static MapState IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
     private final static MapState IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
-    private final static MapState EXPLICIT_CREATE_STATE = new SimpleInMemoryMapState();
+    private final static SetState EXPLICIT_CREATE_STATE = new SimpleInMemorySetState();
     private final static MapState EXPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
     private final static MapState EXPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
     private final static MapState UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
@@ -635,13 +635,11 @@ public class IDLabFunctions {
             return null;
 
         /* IRI in state, cannot be added anymore */
-        if (EXPLICIT_CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+        if (EXPLICIT_CREATE_STATE.contains(actualStateDirPathStr, iri))
             return null;
             /* IRI not in state, add it and return it. */
         else {
-            List<String> values = new ArrayList<>();
-            values.add("CREATED");
-            EXPLICIT_CREATE_STATE.replace(actualStateDirPathStr, iri, values);
+            EXPLICIT_CREATE_STATE.add(actualStateDirPathStr, iri);
             return iri;
         }
     }
