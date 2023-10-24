@@ -1,7 +1,9 @@
 package be.ugent.knows.idlabFunctions;
 
 import be.ugent.knows.idlabFunctions.state.MapState;
+import be.ugent.knows.idlabFunctions.state.SetState;
 import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
+import be.ugent.knows.idlabFunctions.state.SimpleInMemorySetState;
 import be.ugent.knows.util.Cache;
 import be.ugent.knows.util.SearchParameters;
 import be.ugent.knows.util.Utils;
@@ -37,7 +39,7 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private final static MapState IMPLICIT_CREATE_STATE = new SimpleInMemoryMapState();
+    private final static SetState IMPLICIT_CREATE_STATE = new SimpleInMemorySetState();
     private final static MapState IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
     private final static MapState IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
     private final static MapState EXPLICIT_CREATE_STATE = new SimpleInMemoryMapState();
@@ -600,13 +602,11 @@ public class IDLabFunctions {
             return null;
 
         /* IRI in state, cannot be added anymore */
-        if (IMPLICIT_CREATE_STATE.hasKey(actualStateDirPathStr, iri))
+        if (IMPLICIT_CREATE_STATE.contains(actualStateDirPathStr, iri))
             return null;
         /* IRI not in state, add it and return it. */
         else {
-            List<String> values = new ArrayList<>();
-            values.add("CREATED");
-            IMPLICIT_CREATE_STATE.replace(actualStateDirPathStr, iri, values);
+            IMPLICIT_CREATE_STATE.add(actualStateDirPathStr, iri);
             return iri;
         }
     }
