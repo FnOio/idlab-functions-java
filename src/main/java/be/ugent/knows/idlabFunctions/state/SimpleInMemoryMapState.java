@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * <p>Copyright 2022 IDLab (Ghent University - imec)</p>
@@ -17,7 +16,8 @@ public class SimpleInMemoryMapState implements MapState {
     private final static Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
 
     private synchronized Map<String, List<String>> computeMap(final String stateFilePath) {
-        Map<String, List<String>> map = stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
+
+        return stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
             Map<String, List<String>> newMap = new HashMap<>();
@@ -30,8 +30,6 @@ public class SimpleInMemoryMapState implements MapState {
             }
             return newMap;
         });
-
-        return map;
     }
 
     /**
