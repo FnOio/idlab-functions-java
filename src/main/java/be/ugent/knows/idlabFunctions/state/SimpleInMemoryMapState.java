@@ -120,8 +120,7 @@ public class SimpleInMemoryMapState implements MapState {
     @Override
     public synchronized boolean hasKey(String stateFilePath, String key) {
         Map<String, List<String>> map = this.computeMap(stateFilePath);
-        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
-        return values.isEmpty()? false: true;
+        return map.containsKey(key);
     }
 
     @Override
