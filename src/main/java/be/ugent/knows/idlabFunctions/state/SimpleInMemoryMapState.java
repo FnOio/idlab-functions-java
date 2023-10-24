@@ -91,21 +91,19 @@ public class SimpleInMemoryMapState implements MapState {
 
     @Override
     public synchronized Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value) {
+        // returns `0` if value not present for key, or `empty` if already present
         Map<String, List<String>> map = this.computeMap(stateFilePath);
-        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(1));
-        if (values.isEmpty()) {
-            values.add(value);
-            map.put(key, values);
-            return Optional.of(0);
-        } else {
+        if (map.containsKey(key)) {
+            List<String> values = map.get(key);
             if (values.contains(value)) {
                 return Optional.empty();
             } else {
-                List<String> newValues = new ArrayList<>();
-                newValues.add(value);
-                map.put(key, newValues);
-                return Optional.of(newValues.size() - 1);
+                map.put(key, Collections.singletonList(value));
+                return Optional.of(0);
             }
+        } else {
+            map.put(key, Collections.singletonList(value));
+            return Optional.of(0);
         }
     }
 
