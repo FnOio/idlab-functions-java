@@ -123,8 +123,7 @@ public class SimpleInMemoryMapState implements MapState {
 
     @Override
     public synchronized Map<String, List<String>> getEntries(String stateFilePath) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
-        return map;
+        return this.computeMap(stateFilePath);
     }
 
     @Override
