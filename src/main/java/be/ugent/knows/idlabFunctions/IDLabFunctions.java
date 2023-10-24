@@ -43,7 +43,7 @@ public class IDLabFunctions {
     private final static MapState IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
     private final static MapState IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
     private final static SetState EXPLICIT_CREATE_STATE = new SimpleInMemorySetState();
-    private final static MapState EXPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
+    private final static SetState EXPLICIT_UPDATE_STATE = new SimpleInMemorySetState();
     private final static MapState EXPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
     private final static MapState UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
     private final static MapState UNIQUE_CREATE_IRI_STATE = new SimpleInMemoryMapState();
@@ -707,7 +707,6 @@ public class IDLabFunctions {
      * @return The IRI is returned if the member was updated, otherwise null.
      */
     public static String explicitUpdate(String iri, String stateDirPathStr) {
-        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_update_state");
 
         if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
@@ -718,13 +717,13 @@ public class IDLabFunctions {
          * if we pull the same data from the data source
          */
 
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_update_state");
+
         /* IRI already in state, cannot be modified anymore */
-        if (EXPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
+        if (EXPLICIT_UPDATE_STATE.contains(actualStateDirPathStr, iri)) {
             return null;
         } else {
-            List<String> values = new ArrayList<>();
-            values.add("MODIFIED");
-            EXPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, values);
+            EXPLICIT_UPDATE_STATE.add(actualStateDirPathStr, iri);
             return iri;
         }
     }
