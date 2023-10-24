@@ -747,37 +747,43 @@ public class IDLabFunctions {
      * @return List of IRIs is returned of deleted members. An empty list indicates no deletions.
      */
     public static List<String> implicitDelete(String iri, String stateDirPathStr) {
+
+        if (iri == null)
+            return null;
+
         List<String> iris = new ArrayList<>();
         final String SEEN_ID = "SEEN";
         final String NOT_SEEN_ID = "NOT-SEEN";
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
-
-        if (iri == null)
-            return null;
 
         /* Process deletions when marker found */
         List<String> deleted = new ArrayList<>();
         List<String> notSeen = new ArrayList<>();
         if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
             /* Iterate over each entry we may or may not have seen */
-            logger.debug("MAGIC MARKER");
-            logger.debug("Entries: {}", IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).size());
+            if (logger.isDebugEnabled()) {
+                logger.debug("MAGIC MARKER");
+                logger.debug("Entries: {}", IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).size());
+            }
             for (Map.Entry<String, List<String>> entry : IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
-                logger.debug("IRI: {}: value: {}", entry.getKey(), entry.getValue());
+                List<String> value = entry.getValue();
+                if (logger.isDebugEnabled()) logger.debug("IRI: {}: value: {}", entry.getKey(), value);
+
                 /* We haven't seen this entry, thus it has been removed in the current version */
-                if (entry.getValue().isEmpty())
+                if (value.isEmpty())
                     continue;
 
-                if (!entry.getValue().get(0).equals(SEEN_ID)) {
-                    deleted.add(entry.getKey());
-                    iris.add(entry.getKey());
-                    logger.debug("Haven't seen: {} since value {}", entry.getKey(), entry.getValue());
+                String key = entry.getKey();
+                if (!value.get(0).equals(SEEN_ID)) {
+                    deleted.add(key);
+                    iris.add(key);
+                    if (logger.isDebugEnabled()) logger.debug("Haven't seen: {} since value {}", key, value);
                 /*
                  * If we have seen the entry, mark it unseen for the next time we have to check for deletions,
                  * but we never want to insert IRIs with the marker in that triggered the check, so skip those
                  */
                 } else if (!iri.contains(MAGIC_MARKER) || !iri.contains(MAGIC_MARKER_ENCODED)) {
-                    notSeen.add(entry.getKey());
+                    notSeen.add(key);
                 }
             }
 
@@ -795,7 +801,7 @@ public class IDLabFunctions {
             return iris.isEmpty() ? null : iris;
         /* Mark IRI as seen */
         } else {
-            logger.debug("Marking as seen: {}", iri);
+            if (logger.isDebugEnabled()) logger.debug("Marking as seen: {}", iri);
             /* Insert the IRI into the state and mark it as seen */
             List<String> value = new ArrayList<>();
             value.add(SEEN_ID);
