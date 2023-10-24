@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class SimpleInMemoryMapState implements MapState {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
-    private final static Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
+    private final Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
 
     private synchronized Map<String, List<String>> computeMap(final String stateFilePath) {
 
