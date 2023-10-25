@@ -46,7 +46,7 @@ public class IDLabFunctions {
     private final static SetState EXPLICIT_UPDATE_STATE = new SimpleInMemorySetState();
     private final static SetState EXPLICIT_DELETE_STATE = new SimpleInMemorySetState();
     private final static MapState<List<String>> UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
-    private final static MapState<List<String>> UNIQUE_CREATE_IRI_STATE = new SimpleInMemoryMapState();
+    private final static SetState UNIQUE_CREATE_IRI_STATE = new SimpleInMemorySetState();
     private final static MapState<List<String>> UNIQUE_UPDATE_IRI_STATE = new SimpleInMemoryMapState();
     public final static String MAGIC_MARKER = "!@#$%^&()_+";
     public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26%28%29_%2B";
@@ -503,10 +503,8 @@ public class IDLabFunctions {
 
             final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "unique_create_iri_state");
 
-            if(!UNIQUE_CREATE_IRI_STATE.hasKey(iri, actualStateDirPathStr)) {
-                List<String> values = new ArrayList<>();
-                values.add("CREATED");
-                UNIQUE_CREATE_IRI_STATE.replace(actualStateDirPathStr, iri, values);
+            if(!UNIQUE_CREATE_IRI_STATE.contains(actualStateDirPathStr, iri)) {
+                UNIQUE_CREATE_IRI_STATE.add(actualStateDirPathStr, iri);
                 return iri + "#0";
             } else {
                 return null;
