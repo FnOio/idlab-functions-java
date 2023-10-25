@@ -1,9 +1,6 @@
 package be.ugent.knows.idlabFunctions;
 
-import be.ugent.knows.idlabFunctions.state.MapState;
-import be.ugent.knows.idlabFunctions.state.SetState;
-import be.ugent.knows.idlabFunctions.state.SimpleInMemoryMapState;
-import be.ugent.knows.idlabFunctions.state.SimpleInMemorySetState;
+import be.ugent.knows.idlabFunctions.state.*;
 import be.ugent.knows.util.Cache;
 import be.ugent.knows.util.SearchParameters;
 import be.ugent.knows.util.Utils;
@@ -40,7 +37,7 @@ public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
     private final static SetState IMPLICIT_CREATE_STATE = new SimpleInMemorySetState();
-    private final static MapState<List<String>> IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
+    private final static MapState<String> IMPLICIT_UPDATE_STATE = new SimpleInMemorySingleValueMapState();
     private final static MapState<List<String>> IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
     private final static SetState EXPLICIT_CREATE_STATE = new SimpleInMemorySetState();
     private final static SetState EXPLICIT_UPDATE_STATE = new SimpleInMemorySetState();
@@ -677,7 +674,7 @@ public class IDLabFunctions {
 
         /* IRI not in state, cannot be modified yet. Insert it */
         if (!IMPLICIT_UPDATE_STATE.hasKey(actualStateDirPathStr, iri)) {
-            IMPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, Collections.singletonList(watchedPropertyString));
+            IMPLICIT_UPDATE_STATE.replace(actualStateDirPathStr, iri, watchedPropertyString);
             return null;
         }
 
