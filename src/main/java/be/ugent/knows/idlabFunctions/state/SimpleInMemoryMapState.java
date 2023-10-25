@@ -11,7 +11,7 @@ import java.util.*;
  *
  * @author Gerald Haesendonck
  */
-public class SimpleInMemoryMapState implements MapState {
+public class SimpleInMemoryMapState implements MapState<List<String>> {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
     private final Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
 
@@ -162,16 +162,13 @@ public class SimpleInMemoryMapState implements MapState {
 
     @Override
     public synchronized long count(final String stateFilePath, final String key) {
-        if (stateFileToMap.containsKey(stateFilePath)) {
-            Map<String, List<String>> map = stateFileToMap.get(stateFilePath);
-            List<String> values = map.get(key);
-            if (values == null) {
-                return 0;
-            } else {
-                return values.size();
-            }
-        } else {
+        Map<String, List<String>> map = this.computeMap(stateFilePath);
+        List<String> values = map.get(key);
+        if (values == null) {
             return 0;
+        } else {
+            return values.size();
         }
+
     }
 }

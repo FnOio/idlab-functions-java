@@ -13,7 +13,7 @@ import java.util.Optional;
  *
  * @author Gerald Haesendonck
  */
-public interface MapState extends AutoCloseable {
+public interface MapState<T> extends AutoCloseable {
 
     /**
      * Loads or creates a new state map for the given state file path.
@@ -69,7 +69,7 @@ public interface MapState extends AutoCloseable {
      * @param value value to be associated with the specified key
      * @param stateFilePath The path of this state map's persistence file.
      */
-    void replace(final String stateFilePath, final String key, final List<String> value);
+    void replace(final String stateFilePath, final String key, final T value);
 
     /**
      * Checks if an key exists or not.
@@ -84,7 +84,7 @@ public interface MapState extends AutoCloseable {
      * @param stateFilePath The path of this state map's persistence file.
      * @return              All entries.
      */
-    Map<String, List<String>> getEntries(String stateFilePath);
+    Map<String, T> getEntries(String stateFilePath);
 
     /**
      * Deletes all state: removes state files and clears the state in memory.

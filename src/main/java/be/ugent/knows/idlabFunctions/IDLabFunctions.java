@@ -40,14 +40,14 @@ public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
     private final static SetState IMPLICIT_CREATE_STATE = new SimpleInMemorySetState();
-    private final static MapState IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
-    private final static MapState IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
+    private final static MapState<List<String>> IMPLICIT_UPDATE_STATE = new SimpleInMemoryMapState();
+    private final static MapState<List<String>> IMPLICIT_DELETE_STATE = new SimpleInMemoryMapState();
     private final static SetState EXPLICIT_CREATE_STATE = new SimpleInMemorySetState();
     private final static SetState EXPLICIT_UPDATE_STATE = new SimpleInMemorySetState();
     private final static SetState EXPLICIT_DELETE_STATE = new SimpleInMemorySetState();
-    private final static MapState UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
-    private final static MapState UNIQUE_CREATE_IRI_STATE = new SimpleInMemoryMapState();
-    private final static MapState UNIQUE_UPDATE_IRI_STATE = new SimpleInMemoryMapState();
+    private final static MapState<List<String>> UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
+    private final static MapState<List<String>> UNIQUE_CREATE_IRI_STATE = new SimpleInMemoryMapState();
+    private final static MapState<List<String>> UNIQUE_UPDATE_IRI_STATE = new SimpleInMemoryMapState();
     public final static String MAGIC_MARKER = "!@#$%^&()_+";
     public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26%28%29_%2B";
 
