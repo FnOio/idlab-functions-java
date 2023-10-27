@@ -1,7 +1,10 @@
 package be.ugent.knows.idlabFunctions;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,8 +13,21 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LDESGenerationTests {
+    private final static Logger log = LoggerFactory.getLogger(LDESGenerationTests.class);
 
     private static final String STATE_FILE = new File(System.getProperty("java.io.tmpdir"), "state_file").getPath();
+
+    @AfterEach
+    @BeforeEach
+    public void deleteStateFiles() {
+        File stateFile = new File(STATE_FILE);
+        if (stateFile.exists()) {
+            log.debug("Deleting {}", STATE_FILE);
+            if (!stateFile.delete()) {
+                log.warn("Cannot delete state file {}. Ignore if test deleted state.", STATE_FILE);
+            }
+        }
+    }
 
     @AfterEach
     public void cleanUp() {
