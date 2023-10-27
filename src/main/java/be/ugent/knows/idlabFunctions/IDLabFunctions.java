@@ -755,7 +755,6 @@ public class IDLabFunctions {
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
 
         /* Process deletions when marker found */
-        List<String> deleted = new ArrayList<>();
         List<String> notSeen = new ArrayList<>();
         if (iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED)) {
             /* Iterate over each entry we may or may not have seen */
@@ -769,7 +768,6 @@ public class IDLabFunctions {
 
                 String key = entry.getKey();
                 if (!value.equals(IMPLICIT_DELETE_SEEN_ID)) {
-                    deleted.add(key);
                     iris.add(key);
                     if (logger.isDebugEnabled()) logger.debug("Haven't seen: {} since value {}", key, value);
                 /*
@@ -782,7 +780,7 @@ public class IDLabFunctions {
             }
 
             /* Remove the entry from the state as it is deleted */
-            for (String key: deleted)
+            for (String key: iris)
                 IMPLICIT_DELETE_STATE.remove(actualStateDirPathStr, key);
 
             for (String key: notSeen) {
