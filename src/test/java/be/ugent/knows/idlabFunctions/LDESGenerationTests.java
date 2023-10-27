@@ -182,11 +182,18 @@ public class LDESGenerationTests {
         IDLabFunctions.close();
 
         /* Process all deletions, iri2 should be marked as deleted */
-        List<String> generated = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, STATE_FILE);
+        List<String> deleted = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, STATE_FILE);
         IDLabFunctions.close();
-        assertNotNull(generated);
-        assertEquals(1, generated.size());
-        assertEquals(iri2, generated.get(0));
+        assertNotNull(deleted);
+        assertEquals(1, deleted.size());
+        assertEquals(iri2, deleted.get(0));
+
+        /* Add marker agin, so now iri1 should also be deleted */
+        deleted = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, STATE_FILE);
+        assertNotNull(deleted);
+        assertEquals(1, deleted.size());
+        assertEquals(iri1, deleted.get(0));
+
     }
 
     @Test
