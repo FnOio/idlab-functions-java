@@ -6,19 +6,19 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.*;
 
-public class SimpleInMemorySetState implements SetState {
+public class SimpleInMemorySetState<T> implements SetState<T> {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemorySetState.class);
 
-    private final Map<String, Set<String>> stateFileToSet = new HashMap<>();
+    private final Map<String, Set<T>> stateFileToSet = new HashMap<>();
 
-    private synchronized Set<String> computeSet(final String stateFilePath) {
+    private synchronized Set<T> computeSet(final String stateFilePath) {
         return stateFileToSet.computeIfAbsent(stateFilePath, setKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
-            Set<String> newSet = new HashSet<>();
+            Set<T> newSet = new HashSet<>();
             if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
                 try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newSet = (Set<String>)in.readObject();
+                    newSet = (Set<T>)in.readObject();
                 } catch (IOException | ClassNotFoundException e) {
                     log.warn("Cannot load state set from file {}. Creating empty set!", stateFilePath);
                 }
@@ -28,8 +28,8 @@ public class SimpleInMemorySetState implements SetState {
     }
 
     @Override
-    public synchronized boolean contains(String stateFilePath, String value) {
-        Set<String> set = computeSet(stateFilePath);
+    public synchronized boolean contains(String stateFilePath, T value) {
+        Set<T> set = computeSet(stateFilePath);
         return set.contains(value);
     }
 
@@ -56,8 +56,8 @@ public class SimpleInMemorySetState implements SetState {
     }
 
     @Override
-    public void add(String stateFilePath, String value) {
-        Set<String> set = computeSet(stateFilePath);
+    public void add(String stateFilePath, T value) {
+        Set<T> set = computeSet(stateFilePath);
         set.add(value);
     }
 

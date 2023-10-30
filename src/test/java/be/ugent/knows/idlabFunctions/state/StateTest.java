@@ -34,13 +34,13 @@ public class StateTest {
 
     public static Stream<Arguments> mapStates() {
         return Stream.of(
-                Arguments.of(new SimpleInMemoryMapState()),
-                Arguments.of(new SimpleInMemorySingleValueMapState())
+                Arguments.of(new SimpleInMemoryMapState<String, String>()),
+                Arguments.of(new SimpleInMemorySingleValueMapState<String, String>())
         );
     }
 
     public static Stream<Arguments> stateAndNrCombinations() {
-        List<?> states = List.of(new SimpleInMemoryMapState(), new SimpleInMemorySingleValueMapState());
+        List<?> states = List.of(new SimpleInMemoryMapState<String, String>(), new SimpleInMemorySingleValueMapState<String, String>());
         List<Integer> entries = List.of(100, 1000, 10000, 1000000);
         List<Arguments> arguments = new ArrayList<>();
         states.forEach(state ->{
@@ -71,7 +71,7 @@ public class StateTest {
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     public void testSingleThreadedState(boolean isSingleValueMap) throws Exception {
-        try (MapState<?> state = isSingleValueMap? new SimpleInMemorySingleValueMapState(): new SimpleInMemoryMapState()) {
+        try (MapState<?, String, String> state = isSingleValueMap? new SimpleInMemorySingleValueMapState<>(): new SimpleInMemoryMapState<>()) {
             // first create a state by putting something in it
             String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
             assertNull(previous);
@@ -94,7 +94,7 @@ public class StateTest {
         // at this point the state closes
 
         // now re-load state
-        try (MapState<?> state = isSingleValueMap? new SimpleInMemorySingleValueMapState(): new SimpleInMemoryMapState()) {
+        try (MapState<?, String, String> state = isSingleValueMap? new SimpleInMemorySingleValueMapState<>(): new SimpleInMemoryMapState<>()) {
             String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
             assertEquals("do not change anymore", previous);
 
@@ -105,7 +105,7 @@ public class StateTest {
 
     @ParameterizedTest
     @MethodSource("mapStates")
-    public void testMultiThreadedState(MapState<?> state) {
+    public void testMultiThreadedState(MapState<?, String, String> state) {
         final String stateFile1 = tmpStateFile1.getPath();
         final String stateFile2 = tmpStateFile2.getPath();
 
@@ -123,7 +123,7 @@ public class StateTest {
 
     @ParameterizedTest
     @MethodSource("stateAndNrCombinations")
-    public void testManyEntriesSingleThread(MapState<?> state, int nrEntries) {
+    public void testManyEntriesSingleThread(MapState<?, String, String> state, int nrEntries) {
         System.out.println("nr entries: " + nrEntries / 1000 + " K");
         final String stateFileString = tmpStateFile1.getPath();
         long charsWritten = 0;
@@ -144,7 +144,7 @@ public class StateTest {
 
     @ParameterizedTest
     @MethodSource("stateAndNrCombinations")
-    public void testManyEntriesParallel(MapState<?> state, int nrEntries) {
+    public void testManyEntriesParallel(MapState<?, String, String> state, int nrEntries) {
         System.out.println("nr entries: " + nrEntries / 1000 + " K");
         final String stateFile1 = tmpStateFile1.getPath();
         final String stateFile2 = tmpStateFile2.getPath();
@@ -166,7 +166,7 @@ public class StateTest {
 
     @Test
     public void testPutAndReturnIndex() throws Exception {
-        try (MapState state = new SimpleInMemoryMapState()) {
+        try (MapState<List<String>, String, String> state = new SimpleInMemoryMapState<>()) {
             Optional<Integer> indexOpt = state.putAndReturnIndex(tmpStateFile1.getPath(), "acertainkey", "a");
             assertTrue(indexOpt.isPresent());
             assertEquals(0, indexOpt.get());
@@ -183,7 +183,7 @@ public class StateTest {
     @Test
     public void testSaveAllState() throws Exception {
         // first create a state by putting something in it
-        try (MapState<List<String>> state = new SimpleInMemoryMapState()) {
+        try (MapState<List<String>, String, String> state = new SimpleInMemoryMapState<>()) {
             String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
             assertNull(previous);
 
@@ -195,7 +195,7 @@ public class StateTest {
 
     @Test
     public void testDeleteAllState() throws Exception {
-        try (MapState<List<String>> state = new SimpleInMemoryMapState()) {
+        try (MapState<List<String>, String, String> state = new SimpleInMemoryMapState<>()) {
             // first create a state by putting something in it
             String previous = state.put(tmpStateFile1.getPath(), "Hello", "World");
             assertNull(previous);
@@ -215,7 +215,7 @@ public class StateTest {
 
             long startTime = 0;
 
-            try (final MapState state = new SimpleInMemoryMapState()) {
+            try (final MapState<List<String>, String, String> state = new SimpleInMemoryMapState<>()) {
 
             // populate the state with a lot of random stuff
             final Random r = new Random();
@@ -242,7 +242,7 @@ public class StateTest {
 
     @Test
     public void testSetState() throws Exception {
-        try (SetState state = new SimpleInMemorySetState()) {
+        try (SetState<String> state = new SimpleInMemorySetState<>()) {
             state.add(tmpStateFile1.getPath(), "Hello");
             state.add(tmpStateFile1.getPath(), "world");
             assertTrue(state.contains(tmpStateFile1.getPath(), "Hello"));

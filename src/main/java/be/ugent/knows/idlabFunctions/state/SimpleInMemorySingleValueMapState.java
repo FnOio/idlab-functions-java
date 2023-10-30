@@ -8,21 +8,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class SimpleInMemorySingleValueMapState implements MapState<String> {
+public class SimpleInMemorySingleValueMapState<K, V> implements MapState<V, K, V> {
 
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
-    private final Map<String, Map<String, String>> stateFileToMap = new HashMap<>();
+    private final Map<String, Map<K, V>> stateFileToMap = new HashMap<>();
     @Override
-    public synchronized String put(String stateFilePath, String key, String value) {
-        Map<String, String> map = computeMap(stateFilePath);
+    public synchronized V put(String stateFilePath, K key, V value) {
+        Map<K, V> map = computeMap(stateFilePath);
         return map.put(key, value);
     }
 
     @Override
-    public synchronized Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
-        Map<String, String> map = computeMap(stateFilePath);
+    public synchronized Optional<Integer> putAndReturnIndex(String stateFilePath, K key, V value) {
+        Map<K, V> map = computeMap(stateFilePath);
         if (map.containsKey(key)) {
-            String knownValue = map.get(key);
+            V knownValue = map.get(key);
             if (knownValue.equals(value)) {
                 return Optional.empty();
             } else {
@@ -36,24 +36,24 @@ public class SimpleInMemorySingleValueMapState implements MapState<String> {
     }
 
     @Override
-    public synchronized Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value) {
+    public synchronized Optional<Integer> replaceAndReturnIndex(String stateFilePath, K key, V value) {
         // for a single value, this is the same as putAndReturnIndex
         return putAndReturnIndex(stateFilePath, key, value);
     }
 
     @Override
-    public void replace(String stateFilePath, String key, String value) {
+    public void replace(String stateFilePath, K key, V value) {
         put(stateFilePath, key, value);
     }
 
     @Override
-    public synchronized boolean hasKey(String stateFilePath, String key) {
-        Map<String, String> map = computeMap(stateFilePath);
+    public synchronized boolean hasKey(String stateFilePath, K key) {
+        Map<K, V> map = computeMap(stateFilePath);
         return map.containsKey(key);
     }
 
     @Override
-    public Map<String, String> getEntries(String stateFilePath) {
+    public Map<K, V> getEntries(String stateFilePath) {
         return this.computeMap(stateFilePath);
     }
 
@@ -80,14 +80,14 @@ public class SimpleInMemorySingleValueMapState implements MapState<String> {
     }
 
     @Override
-    public long count(String stateFilePath, String key) {
-        Map<String, String> map = computeMap(stateFilePath);
+    public long count(String stateFilePath, K key) {
+        Map<K, V> map = computeMap(stateFilePath);
         return map.containsKey(key) ? 1 : 0;
     }
 
     @Override
-    public synchronized void remove(String stateFilePath, String key) {
-        Map<String, String> map = computeMap(stateFilePath);
+    public synchronized void remove(String stateFilePath, K key) {
+        Map<K, V> map = computeMap(stateFilePath);
         map.remove(key);
     }
 
@@ -97,14 +97,14 @@ public class SimpleInMemorySingleValueMapState implements MapState<String> {
         stateFileToMap.clear();
     }
 
-    private synchronized Map<String, String> computeMap(final String stateFilePath) {
+    private synchronized Map<K, V> computeMap(final String stateFilePath) {
         return stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
-            Map<String, String> newMap = new HashMap<>();
+            Map<K, V> newMap = new HashMap<>();
             if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
                 try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, String>)in.readObject();
+                    newMap = (Map<K, V>)in.readObject();
                 } catch (IOException | ClassNotFoundException e) {
                     log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
                 }

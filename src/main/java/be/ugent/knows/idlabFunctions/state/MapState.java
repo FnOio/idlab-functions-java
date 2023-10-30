@@ -9,11 +9,12 @@ import java.util.Optional;
  * the state is persisted and the value is a state. A state is again a
  * map of key - value Strings.
  *
+ *
  * <p>Copyright 2022 IDLab (Ghent University - imec)</p>
  *
  * @author Gerald Haesendonck
  */
-public interface MapState<T> extends AutoCloseable {
+public interface MapState<T, K, V> extends AutoCloseable {
 
     /**
      * Loads or creates a new state map for the given state file path.
@@ -32,7 +33,7 @@ public interface MapState<T> extends AutoCloseable {
      *         if the implementation supports {@code null} values.)
      * @param stateFilePath The path of this state map's persistence file.
      */
-    String put(final String stateFilePath, final String key, final String value);
+    V put(final String stateFilePath, final K key, final V value);
 
     /**
      * Loads or creates a new state map for the given state file path.
@@ -46,7 +47,7 @@ public interface MapState<T> extends AutoCloseable {
      * @return              If {@code value} was not previously associated with {@code key}: {@code Optional.empty()};
      *                      else an Optional with the number of elements - 1 as value (i.e., the index)
      */
-    Optional<Integer> putAndReturnIndex(final String stateFilePath, final String key, final String value);
+    Optional<Integer> putAndReturnIndex(final String stateFilePath, final K key, final V value);
 
     /**
      * Loads or creates a new state map for the given state file path.
@@ -60,16 +61,16 @@ public interface MapState<T> extends AutoCloseable {
      * @return              If {@code value} was not previously associated with {@code key}: {@code Optional.empty()};
      *                      else an Optional with the number of elements - 1 as value (i.e., the index)
      */
-    Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value);
+    Optional<Integer> replaceAndReturnIndex(String stateFilePath, K key, V value);
 
     /**
      * Replaces the values of a key.
      *
      * @param key key with which the specified value is to be associated
-     * @param value value to be associated with the specified key
+     * @param allValues value to be associated with the specified key
      * @param stateFilePath The path of this state map's persistence file.
      */
-    void replace(final String stateFilePath, final String key, final T value);
+    void replace(final String stateFilePath, final K key, final T allValues);
 
     /**
      * Checks if an key exists or not.
@@ -77,14 +78,14 @@ public interface MapState<T> extends AutoCloseable {
      * @param key           The key with which the specified value is to be associated.
      * @return              True if the pair exists, otherwise false.
      */
-    boolean hasKey(String stateFilePath, String key);
+    boolean hasKey(String stateFilePath, K key);
 
     /**
      * Return all entries in state.
      * @param stateFilePath The path of this state map's persistence file.
      * @return              All entries.
      */
-    Map<String, T> getEntries(String stateFilePath);
+    Map<K, T> getEntries(String stateFilePath);
 
     /**
      * Deletes all state: removes state files and clears the state in memory.
@@ -102,12 +103,12 @@ public interface MapState<T> extends AutoCloseable {
      * @param key           The key to count the values for.
      * @return              The number of entries in the state.
      */
-    long count(final String stateFilePath, final String key);
+    long count(final String stateFilePath, final K key);
 
     /**
      * Remove a key from the state
      * @param stateFilePath The path of this state map's persistence file.
      * @param key           The key to count the values for.
      */
-    void remove(String stateFilePath, String key);
+    void remove(String stateFilePath, K key);
 }

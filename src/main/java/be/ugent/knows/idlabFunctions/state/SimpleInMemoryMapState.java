@@ -11,19 +11,19 @@ import java.util.*;
  *
  * @author Gerald Haesendonck
  */
-public class SimpleInMemoryMapState implements MapState<List<String>> {
+public class SimpleInMemoryMapState<K, V> implements MapState<List<V>, K, V> {
     private final static Logger log = LoggerFactory.getLogger(SimpleInMemoryMapState.class);
-    private final Map<String, Map<String, List<String>>> stateFileToMap = new HashMap<>();
+    private final Map<String, Map<K, List<V>>> stateFileToMap = new HashMap<>();
 
-    private synchronized Map<String, List<String>> computeMap(final String stateFilePath) {
+    private synchronized Map<K, List<V>> computeMap(final String stateFilePath) {
 
         return stateFileToMap.computeIfAbsent(stateFilePath, mapKey -> {
             // first check if file exists and try to load map
             File stateFile = new File(stateFilePath);
-            Map<String, List<String>> newMap = new HashMap<>();
+            Map<K, List<V>> newMap = new HashMap<>();
             if (stateFile.exists() && stateFile.isFile() && stateFile.canRead()) {
                 try (ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(stateFilePath)))){
-                    newMap = (Map<String, List<String>>)in.readObject();
+                    newMap = (Map<K, List<V>>)in.readObject();
                 } catch (IOException | ClassNotFoundException e) {
                     log.warn("Cannot load state map from file {}. Creating empty map!", stateFilePath);
                 }
@@ -50,9 +50,9 @@ public class SimpleInMemoryMapState implements MapState<List<String>> {
      * @param stateFilePath The path of this state map's persistance file.
      */
     @Override
-    public synchronized String put(final String stateFilePath, final String key, final String value) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
-        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>());  // TODO perf: verander in map (ten koste van memory)
+    public synchronized V put(final String stateFilePath, final K key, final V value) {
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
+        List<V> values = map.computeIfAbsent(key, k -> new ArrayList<>());  // TODO perf: verander in map (ten koste van memory)
         if (values.isEmpty()) {
             values.add(value);
             map.put(key, values);
@@ -62,7 +62,7 @@ public class SimpleInMemoryMapState implements MapState<List<String>> {
             if (values.contains(value)) {
                 return values.get(values.size() - 1);
             } else {
-                String returnValue = values.get(values.size() - 1);
+                V returnValue = values.get(values.size() - 1);
                 values.add(value);
                 map.put(key, values);
                 return returnValue;
@@ -71,9 +71,9 @@ public class SimpleInMemoryMapState implements MapState<List<String>> {
     }
 
     @Override
-    public synchronized Optional<Integer> putAndReturnIndex(String stateFilePath, String key, String value) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
-        List<String> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
+    public synchronized Optional<Integer> putAndReturnIndex(String stateFilePath, K key, V value) {
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
+        List<V> values = map.computeIfAbsent(key, k -> new ArrayList<>(4));
         if (values.isEmpty()) {
             values.add(value);
             map.put(key, values);
@@ -90,11 +90,11 @@ public class SimpleInMemoryMapState implements MapState<List<String>> {
     }
 
     @Override
-    public synchronized Optional<Integer> replaceAndReturnIndex(String stateFilePath, String key, String value) {
+    public synchronized Optional<Integer> replaceAndReturnIndex(String stateFilePath, K key, V value) {
         // returns `0` if value not present for key, or `empty` if already present
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
         if (map.containsKey(key)) {
-            List<String> values = map.get(key);
+            List<V> values = map.get(key);
             if (values.contains(value)) {
                 return Optional.empty();
             } else {
@@ -108,25 +108,25 @@ public class SimpleInMemoryMapState implements MapState<List<String>> {
     }
 
     @Override
-    public synchronized void replace(String stateFilePath, String key, List<String> value) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
+    public synchronized void replace(String stateFilePath, K key, List<V> value) {
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
         map.put(key, value);
     }
 
     @Override
-    public synchronized boolean hasKey(String stateFilePath, String key) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
+    public synchronized boolean hasKey(String stateFilePath, K key) {
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
         return map.containsKey(key);
     }
 
     @Override
-    public synchronized Map<String, List<String>> getEntries(String stateFilePath) {
+    public synchronized Map<K, List<V>> getEntries(String stateFilePath) {
         return this.computeMap(stateFilePath);
     }
 
     @Override
-    public synchronized void remove(String stateFilePath, String key) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
+    public synchronized void remove(String stateFilePath, K key) {
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
         map.remove(key);
     }
 
@@ -161,9 +161,9 @@ public class SimpleInMemoryMapState implements MapState<List<String>> {
     }
 
     @Override
-    public synchronized long count(final String stateFilePath, final String key) {
-        Map<String, List<String>> map = this.computeMap(stateFilePath);
-        List<String> values = map.get(key);
+    public synchronized long count(final String stateFilePath, final K key) {
+        Map<K, List<V>> map = this.computeMap(stateFilePath);
+        List<V> values = map.get(key);
         if (values == null) {
             return 0;
         } else {

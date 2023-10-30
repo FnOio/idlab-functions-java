@@ -36,22 +36,22 @@ import java.util.stream.Collectors;
 public class IDLabFunctions {
 
     private static final Logger logger = LoggerFactory.getLogger(IDLabFunctions.class);
-    private final static SetState IMPLICIT_CREATE_STATE = new SimpleInMemorySetState();
-    private final static MapState<String> IMPLICIT_UPDATE_STATE = new SimpleInMemorySingleValueMapState();
-    private final static MapState<String> IMPLICIT_DELETE_STATE = new SimpleInMemorySingleValueMapState();
-    private final static SetState EXPLICIT_CREATE_STATE = new SimpleInMemorySetState();
-    private final static SetState EXPLICIT_UPDATE_STATE = new SimpleInMemorySetState();
-    private final static SetState EXPLICIT_DELETE_STATE = new SimpleInMemorySetState();
-    private final static MapState<List<String>> UNIQUE_IRI_STATE = new SimpleInMemoryMapState();
-    private final static SetState UNIQUE_CREATE_IRI_STATE = new SimpleInMemorySetState();
-    private final static MapState<List<String>> UNIQUE_UPDATE_IRI_STATE = new SimpleInMemoryMapState();
+    private final static SetState<String> IMPLICIT_CREATE_STATE = new SimpleInMemorySetState<>();
+    private final static MapState<String, String, String> IMPLICIT_UPDATE_STATE = new SimpleInMemorySingleValueMapState<>();
+    private final static MapState<Boolean, String, Boolean> IMPLICIT_DELETE_STATE = new SimpleInMemorySingleValueMapState<>();
+    private final static SetState<String> EXPLICIT_CREATE_STATE = new SimpleInMemorySetState<>();
+    private final static SetState<String> EXPLICIT_UPDATE_STATE = new SimpleInMemorySetState<>();
+    private final static SetState<String> EXPLICIT_DELETE_STATE = new SimpleInMemorySetState<>();
+    private final static MapState<List<String>, String, String> UNIQUE_IRI_STATE = new SimpleInMemoryMapState<>();
+    private final static SetState<String> UNIQUE_CREATE_IRI_STATE = new SimpleInMemorySetState<>();
+    private final static MapState<List<String>, String, String> UNIQUE_UPDATE_IRI_STATE = new SimpleInMemoryMapState<>();
 
     /* Some valriables used by create, update and delete functions */
     public final static String MAGIC_MARKER = "!@#$%^&()_+";
     public final static String MAGIC_MARKER_ENCODED = "%21%40%23%24%25%5E%26%28%29_%2B";
 
-    private final static String IMPLICIT_DELETE_SEEN_ID = "1";
-    private final static String IMPLICIT_DELETE_NOT_SEEN_ID = "0";
+    private final static boolean IMPLICIT_DELETE_SEEN_ID = true;
+    private final static boolean IMPLICIT_DELETE_NOT_SEEN_ID = false;
 
     private final static Map<String, String> STATE_FILE_PATH_CACHE = new HashMap<>();
 
@@ -762,12 +762,12 @@ public class IDLabFunctions {
                 logger.debug("MAGIC MARKER");
                 logger.debug("Entries: {}", IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).size());
             }
-            for (Map.Entry<String, String> entry : IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
-                String value = entry.getValue();
+            for (Map.Entry<String, Boolean> entry : IMPLICIT_DELETE_STATE.getEntries(actualStateDirPathStr).entrySet()) {
+                boolean value = entry.getValue();
                 if (logger.isDebugEnabled()) logger.debug("IRI: {}: value: {}", entry.getKey(), value);
 
                 String key = entry.getKey();
-                if (!value.equals(IMPLICIT_DELETE_SEEN_ID)) {
+                if (value != IMPLICIT_DELETE_SEEN_ID) {
                     iris.add(key);
                     if (logger.isDebugEnabled()) logger.debug("Haven't seen: {} since value {}", key, value);
                 /*

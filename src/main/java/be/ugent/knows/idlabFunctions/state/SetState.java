@@ -1,6 +1,6 @@
 package be.ugent.knows.idlabFunctions.state;
 
-public interface SetState extends AutoCloseable {
+public interface SetState<T> extends AutoCloseable {
     /**
      * Checks if an value exists or not.
      *
@@ -8,7 +8,7 @@ public interface SetState extends AutoCloseable {
      * @param value           The value with which the specified value is to be associated.
      * @return True if the pair exists, otherwise false.
      **/
-    boolean contains(final String stateFilePath, final String value);
+    boolean contains(final String stateFilePath, final T value);
 
     /**
      * Writes all state to disk, keeping all data in memory.
@@ -34,5 +34,5 @@ public interface SetState extends AutoCloseable {
      *         if the implementation supports {@code null} values.)
      * @param stateFilePath The path of this state map's persistence file.
      */
-    void add(final String stateFilePath, final String value);
+    void add(final String stateFilePath, final T value);
 }
