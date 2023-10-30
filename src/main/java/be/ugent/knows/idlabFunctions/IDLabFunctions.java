@@ -751,7 +751,7 @@ public class IDLabFunctions {
         if (iri == null)
             return null;
 
-        List<String> iris = new ArrayList<>();
+        List<String> deletedIRIs = new ArrayList<>();
         final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_delete_state");
 
         /* Process deletions when marker found */
@@ -768,7 +768,7 @@ public class IDLabFunctions {
 
                 String key = entry.getKey();
                 if (value != IMPLICIT_DELETE_SEEN_ID) {
-                    iris.add(key);
+                    deletedIRIs.add(key);
                     if (logger.isDebugEnabled()) logger.debug("Haven't seen: {} since value {}", key, value);
                 /*
                  * If we have seen the entry, mark it unseen for the next time we have to check for deletions,
@@ -780,7 +780,7 @@ public class IDLabFunctions {
             }
 
             /* Remove the entry from the state as it is deleted */
-            for (String key: iris)
+            for (String key: deletedIRIs)
                 IMPLICIT_DELETE_STATE.remove(actualStateDirPathStr, key);
 
             for (String key: notSeen) {
@@ -788,7 +788,7 @@ public class IDLabFunctions {
             }
 
             /* Return NULL when list is empty to avoid triggering any Triples Map */
-            return iris.isEmpty() ? null : iris;
+            return deletedIRIs.isEmpty() ? null : deletedIRIs;
         /* Mark IRI as seen */
         } else {
             if (logger.isDebugEnabled()) logger.debug("Marking as seen: {}", iri);
