@@ -188,7 +188,7 @@ public class LDESGenerationTests {
         assertEquals(1, deleted.size());
         assertEquals(iri2, deleted.get(0));
 
-        /* Add marker agin, so now iri1 should also be deleted */
+        /* Add marker again, so now iri1 should also be deleted */
         deleted = IDLabFunctions.implicitDelete(IDLabFunctions.MAGIC_MARKER, STATE_FILE);
         assertNotNull(deleted);
         assertEquals(1, deleted.size());
