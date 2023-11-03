@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Optimized implicit/explicit create/update/delete 
 - Made MapState more generic
+- New namespaces for IDLab functions (<https://w3id.org/imec/idlab/function#) and function mappings (<https://w3id.org/imec/idlab/function-mapping#).
 
 ## [1.2.0]
 
