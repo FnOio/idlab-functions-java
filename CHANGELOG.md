@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New namespaces for IDLab functions (<https://w3id.org/imec/idlab/function#) and function mappings (<https://w3id.org/imec/idlab/function-mapping#).
 - Require Java 17+
 
+### Fixed
+- Javadoc
+
 ## [1.2.0]
 
 ### Removed

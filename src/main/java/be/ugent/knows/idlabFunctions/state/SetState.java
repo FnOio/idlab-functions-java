@@ -27,11 +27,6 @@ public interface SetState<T> extends AutoCloseable {
      * Note that the state is only persisted to file upon {@link #close()}.
      *
      * @param value value to be associated with the specified key
-     * @return the previous value associated with {@code key}, or
-     *         {@code null} if there was no mapping for {@code key}.
-     *         (A {@code null} return can also indicate that the map
-     *         previously associated {@code null} with {@code key},
-     *         if the implementation supports {@code null} values.)
      * @param stateFilePath The path of this state map's persistence file.
      */
     void add(final String stateFilePath, final T value);

@@ -74,8 +74,6 @@ public class Cache {
      * @param inputFile The path of a csv file in which the searchValues needs to be found.
      * @param toColumn The index of column the value of witch should be found.
      * @return found matching on filters value from the csv file.
-     * @throws IOException
-     * @throws CsvValidationException
      */
     public static String readFromCache(List<String> searchValues, List<Integer> fromColumns, String inputFile, Integer toColumn){
         SearchParameters pair = new SearchParameters(searchValues, fromColumns, inputFile);

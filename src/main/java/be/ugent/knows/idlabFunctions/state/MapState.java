@@ -1,6 +1,5 @@
 package be.ugent.knows.idlabFunctions.state;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
