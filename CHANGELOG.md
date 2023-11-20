@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - SetState, besides MapState, if one needs a Set rather than a Map to keep state.
+- Prepare for publishing on Maven central repository.
 
 ### Changed
 - Optimized implicit/explicit create/update/delete 

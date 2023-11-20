@@ -8,12 +8,45 @@
     <artifactId>idlab-functions-java</artifactId>
     <version>1.3.0-SNAPSHOT</version>
     <name>idlab-functions-java</name>
-    <url>https://fno.io/</url>
+    <packaging>jar</packaging>
+    <url>https://knows.idlab.ugent.be/</url>
+    <description>
+        Basic functions commonly used by tools developed at KNoWS - IDLab.
+    </description>
+    <licenses>
+        <license>
+            <name>The MIT License</name>
+            <url>https://gitlab.ilabt.imec.be/KNoWS/fno/lib/idlab-functions-java/-/raw/main/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:ssh://git@github.com:FnOio/idlab-functions-java.git</connection>
+        <url>https://github.com/FnOio/idlab-functions-java</url>
+    </scm>
+    <developers>
+        <developer>
+            <id>bjdmeest</id>
+            <name>Ben De Meester</name>
+            <email>ben.demeester@ugent.be</email>
+        </developer>
+        <developer>
+            <id>ghsnd</id>
+            <name>Gerald Haesendonck</name>
+            <email>gerald.haesendonck@ugent.be</email>
+        </developer>
+        <developer>
+            <id>DylanVanAssche</id>
+            <name>Dylan Van Assche</name>
+            <email>me@dylanvanassche.be</email>
+        </developer>
+    </developers>
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
         <slf4j.version>2.0.5</slf4j.version>
         <junit.version>5.9.1</junit.version>
@@ -170,4 +203,79 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+
+        <!-- Profile used to release to Maven central repo -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Publish on Maven central repository -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>1.6.13</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Generate Source jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Generate Javadoc jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Sign components with GPG -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>6861488FA42A028D5378AF8833C4D74DDB5F1B28</keyname>
+                                    <passphraseServerId>6861488FA42A028D5378AF8833C4D74DDB5F1B28</passphraseServerId>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
 </project>
