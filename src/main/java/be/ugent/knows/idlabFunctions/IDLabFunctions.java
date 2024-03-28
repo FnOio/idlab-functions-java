@@ -596,19 +596,7 @@ public class IDLabFunctions {
      * @return The IRI is returned if the member was created, otherwise null.
      */
     public static String implicitCreate(String iri, String stateDirPathStr) {
-        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "implicit_create_state");
-
-        if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
-            return null;
-
-        /* IRI in state, cannot be added anymore */
-        if (IMPLICIT_CREATE_STATE.contains(actualStateDirPathStr, iri))
-            return null;
-        /* IRI not in state, add it and return it. */
-        else {
-            IMPLICIT_CREATE_STATE.add(actualStateDirPathStr, iri);
-            return iri;
-        }
+        return create(iri, stateDirPathStr, LDES_MEMBER_CREATE_TYPE.implicit);
     }
 
     /**
@@ -629,19 +617,40 @@ public class IDLabFunctions {
      * @return The IRI is returned if the member was created, otherwise null.
      */
     public static String explicitCreate(String iri, String stateDirPathStr) {
-        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, "explicit_create_state");
+        return create(iri, stateDirPathStr, LDES_MEMBER_CREATE_TYPE.explicit);
+    }
 
+    private enum LDES_MEMBER_CREATE_TYPE {
+        implicit, explicit
+    }
+
+    private static String create(String iri, String stateDirPathStr, LDES_MEMBER_CREATE_TYPE create_type) {
         if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
+        String stateDirPath = "";
+        SetState<String> state = null;
+        switch (create_type) {
+            case explicit -> {
+                stateDirPath = "explicit_create_state";
+                state = EXPLICIT_CREATE_STATE;
+            }
+            case implicit -> {
+                stateDirPath = "implicit_create_state";
+                state = IMPLICIT_CREATE_STATE;
+            }
+        }
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, stateDirPath);
+
         /* IRI in state, cannot be added anymore */
-        if (EXPLICIT_CREATE_STATE.contains(actualStateDirPathStr, iri))
+        if (state.contains(actualStateDirPathStr, iri))
             return null;
             /* IRI not in state, add it and return it. */
         else {
-            EXPLICIT_CREATE_STATE.add(actualStateDirPathStr, iri);
+            state.add(actualStateDirPathStr, iri);
             return iri;
         }
+
     }
 
     /**
