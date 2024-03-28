@@ -378,7 +378,7 @@ public class IDLabFunctions {
      * @return A normalized date string in the ISO-8601 format uuuu-MM-ddTHH:mm:ss (xs:datetime), or null if parsing the input fails.
      */
     public static String normalizeDateTime(String dateTimeStr, String pattern) {
-        return normalizeDateTimeWithLang(dateTimeStr, pattern, Locale.getDefault().getLanguage());
+        return normalizeDateTimeWithLang(dateTimeStr, pattern, Locale.ENGLISH.getLanguage());
     }
 
     public static void saveState() {
