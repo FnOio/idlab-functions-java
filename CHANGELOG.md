@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Use same underlying function for `implicitCreate` and `explicitCreate`
 - Use `ENGLISH` locale instead of the system's locale for normalizing dateTimes if no language is given
+- Fix caching issue in `resolveStateDirPath` (see GitLab [issue 13](https://gitlab.ilabt.imec.be/KNoWS/fno/lib/idlab-functions-java/-/issues/13))
 
 ## [1.3.1]
 
