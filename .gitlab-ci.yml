@@ -57,7 +57,6 @@ default:
     - 'mvn $MAVEN_CLI_OPTS test'
   except:
     - main
-    - development
 
 # Test merge requests using JDK8
 test:jdk17:
