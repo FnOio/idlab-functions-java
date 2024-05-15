@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.3.2] - 2024-05-15
+
 ### Fixed
 - Use same underlying function for `implicitCreate` and `explicitCreate`
 - Use `ENGLISH` locale instead of the system's locale for normalizing dateTimes if no language is given
 - Fix caching issue in `resolveStateDirPath` (see GitLab [issue 13](https://gitlab.ilabt.imec.be/KNoWS/fno/lib/idlab-functions-java/-/issues/13))
+- Updated slf4j to version 2.0.7
+- Updated jackson to version 2.15.2
+- Updated slugify to version 3.0.6
+- Updated junit to 5.10.0
 
 ## [1.3.1]
 
@@ -161,6 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code extracted from [RMLMapper](https://github.com/RMLio/rmlmapper-java)
 
+[1.3.2]: https://github.com/FnOio/idlab-functions-java/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/FnOio/idlab-functions-java/compare/v1.2.0...v1.3.1
 [1.2.0]: https://github.com/FnOio/idlab-functions-java/compare/v1.1.3...v1.2.0
 [1.1.3]: https://github.com/FnOio/idlab-functions-java/compare/v1.1.2...v1.1.3
