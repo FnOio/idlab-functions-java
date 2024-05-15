@@ -80,22 +80,25 @@ public class IDLabFunctions {
      * @return the resolved state dir path
      */
     private static String resolveStateDirPath(final String stateDirPathStr, final String state_file) {
-
-        // first check if in cache
-        final String result = STATE_FILE_PATH_CACHE.get(stateDirPathStr);
-        if (result != null) {
-            return result;
-        }
-
-        // not in cache, do actual resolve
         final String actualStateFilePathStr;
         final String checkedStateDirPathStr;
+
+        // Make stateDirPathStr not null
         if (stateDirPathStr == null || stateDirPathStr.isEmpty()) {
             logger.debug("stateDirPathStr = NULL. Trying to read ifState property.");
             checkedStateDirPathStr = System.getProperty("ifState", "__tmp");
         } else {
             checkedStateDirPathStr = stateDirPathStr;
         }
+
+        // Check if in cache, and return result if so
+        final String cacheKey = checkedStateDirPathStr + '/' + state_file;
+        final String result = STATE_FILE_PATH_CACHE.get(cacheKey);
+        if (result != null) {
+            return result;
+        }
+
+        // Not in cache, do complete resolving.
         logger.debug("checkedStateDirPathStr = '{}'", checkedStateDirPathStr);
         if (checkedStateDirPathStr.equals("__tmp")) {
             actualStateFilePathStr = new File(System.getProperty("java.io.tmpdir"), state_file).getPath();
@@ -114,7 +117,7 @@ public class IDLabFunctions {
             actualStateFilePathStr = new File(stateDir, new File(checkedStateDirPathStr).getName()).getPath();
         }
         logger.debug("actualStateFilePathStr = '{}'", actualStateFilePathStr);
-        STATE_FILE_PATH_CACHE.put(stateDirPathStr, actualStateFilePathStr);
+        STATE_FILE_PATH_CACHE.put(cacheKey, actualStateFilePathStr);
         return actualStateFilePathStr;
     }
 
@@ -628,19 +631,19 @@ public class IDLabFunctions {
         if (iri == null || iri.contains(MAGIC_MARKER) || iri.contains(MAGIC_MARKER_ENCODED))
             return null;
 
-        String stateDirPath = "";
+        String stateFilePath = "";
         SetState<String> state = null;
         switch (create_type) {
             case explicit -> {
-                stateDirPath = "explicit_create_state";
+                stateFilePath = "explicit_create_state";
                 state = EXPLICIT_CREATE_STATE;
             }
             case implicit -> {
-                stateDirPath = "implicit_create_state";
+                stateFilePath = "implicit_create_state";
                 state = IMPLICIT_CREATE_STATE;
             }
         }
-        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, stateDirPath);
+        final String actualStateDirPathStr = IDLabFunctions.resolveStateDirPath(stateDirPathStr, stateFilePath);
 
         /* IRI in state, cannot be added anymore */
         if (state.contains(actualStateDirPathStr, iri))
