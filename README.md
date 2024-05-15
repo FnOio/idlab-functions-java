@@ -5,9 +5,20 @@ Basic functions commonly used by tools developed at [KNoWS - IDLab](https://know
 The functions in this library are [semantically described](src/main/resources/fno)
 using the [Function Ontology](https://fno.io/).
 
+## Setup
+The easiest is to include IDLab Functions as a maven dependency:
+
+```xml
+<dependency>
+    <groupId>be.ugent.idlab.knows</groupId>
+    <artifactId>idlab-functions-java</artifactId>
+    <version>1.3.2</version>
+</dependency>
+```
+
 ## Building
 
-To build a JAR with dependecies:
+To build a JAR:
 
 ```
 mvn package
