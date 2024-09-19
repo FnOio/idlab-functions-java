@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Let `resolveStateDirPath` return the correct state path when using the `ifState` environment variable to set the state directory.
+- Updated slf4j to version 2.0.12
+- Updated jackson to version 2.15.3
+- Updated junit to version 5.10.2
+- Updated jsonpath to 2.9.0
+- Updated opencsv to 5.9
+- Updated slugify to 3.0.7
 
 ## [1.3.2] - 2024-05-15
 
