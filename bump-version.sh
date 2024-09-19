@@ -5,7 +5,7 @@ set -e
 
 if [ -z "$1" ]
 then
-	echo 'Version parameter not given. Invoke as e.g. ./bunmp-version.sh 1.0.0'.
+	echo 'Version parameter not given. Invoke as e.g. ./bump-version.sh 1.0.0'.
 	exit 1
 fi
 
@@ -33,4 +33,11 @@ sed -i -e "s|<version>.*<\/version>|<version>$VERSION</version>|" README.md
 if [ ! "$(yes_or_no 'Do you also want to add the version to CHANGELOG.md?')" ]
 then
 	changefrog -n $VERSION
+fi
+
+tagname="v$VERSION"
+if [ ! "$(yes_or_no 'Do you also want to create a git tag $tagname and push it?')" ]
+then
+	git tag $tagname
+	git push origin $tagname
 fi

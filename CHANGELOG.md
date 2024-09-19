@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated opencsv to 5.9
 - Updated slugify to 3.0.7
 
+### Changed
+- `bump-version.sh` can now also create and push a git tag.
+
 ## [1.3.2] - 2024-05-15
 
 ### Fixed
