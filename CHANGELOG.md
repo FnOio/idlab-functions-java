@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.3.3] - 2024-09-19
+
 ### Fixed
 - Let `resolveStateDirPath` return the correct state path when using the `ifState` environment variable to set the state directory.
 - Updated slf4j to version 2.0.12
@@ -179,6 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Code extracted from [RMLMapper](https://github.com/RMLio/rmlmapper-java)
 
+[1.3.3]: https://github.com/FnOio/idlab-functions-java/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/FnOio/idlab-functions-java/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/FnOio/idlab-functions-java/compare/v1.2.0...v1.3.1
 [1.2.0]: https://github.com/FnOio/idlab-functions-java/compare/v1.1.3...v1.2.0

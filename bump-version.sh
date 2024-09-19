@@ -36,8 +36,10 @@ then
 fi
 
 tagname="v$VERSION"
-if [ ! "$(yes_or_no 'Do you also want to create a git tag $tagname and push it?')" ]
+if [ ! "$(yes_or_no 'Do you also want to commit the changes, create a git tag $tagname and push it?')" ]
 then
+	git add CHANGELOG.md README.md pom.xml
+	git commit -m "Update version to $VERSION"
 	git tag $tagname
 	git push origin $tagname
 fi
