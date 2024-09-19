@@ -79,7 +79,7 @@ public class IDLabFunctions {
      * @param state_file        The file where state is kept within {@code stateDirPathStr}.
      * @return the resolved state dir path
      */
-    private static String resolveStateDirPath(final String stateDirPathStr, final String state_file) {
+    static String resolveStateDirPath(final String stateDirPathStr, final String state_file) {
         final String actualStateFilePathStr;
         final String checkedStateDirPathStr;
 
@@ -105,7 +105,7 @@ public class IDLabFunctions {
         } else if (checkedStateDirPathStr.equals("__working_dir")) {
             actualStateFilePathStr = new File(System.getProperty("user.dir"), state_file).getPath();
         } else {
-            File stateDir = new File(checkedStateDirPathStr).getParentFile();
+            File stateDir = new File(checkedStateDirPathStr);
             if (!stateDir.exists()) {
                 if (stateDir.mkdirs()) {
                     logger.debug("Created new state file directory '{}'", stateDir);
@@ -114,7 +114,7 @@ public class IDLabFunctions {
                     stateDir = new File(System.getProperty("java.io.tmpdir"));
                 }
             }
-            actualStateFilePathStr = new File(stateDir, new File(checkedStateDirPathStr).getName()).getPath();
+            actualStateFilePathStr = new File(stateDir, state_file).getPath();
         }
         logger.debug("actualStateFilePathStr = '{}'", actualStateFilePathStr);
         STATE_FILE_PATH_CACHE.put(cacheKey, actualStateFilePathStr);

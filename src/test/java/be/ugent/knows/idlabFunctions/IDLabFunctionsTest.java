@@ -386,4 +386,19 @@ public class IDLabFunctionsTest {
         assertEquals("eentwee", result);
     }
 
+    @Test
+    public void testStateSetByIfStateEnvironmentVar() {
+        // Set ifState environment variable
+        System.setProperty("ifState", "/tmp/custom_state_path");
+
+        // Get state path
+        final String statePath = IDLabFunctions.resolveStateDirPath(null,"implicit_create_state");
+
+        // Unset the ifState env var (important for other tests)
+        System.clearProperty("ifState");
+
+        // Check!
+        assertEquals("/tmp/custom_state_path/implicit_create_state", statePath);
+    }
+
 }
