@@ -401,4 +401,42 @@ public class IDLabFunctionsTest {
         assertEquals("/tmp/custom_state_path/implicit_create_state", statePath);
     }
 
+    @Test
+    public void testCrossConcatNormal() {
+        List<String> result = IDLabFunctions.crossConcat(List.of("sunny", "rainy"), List.of("day", "night"), " ");
+        assertArrayEquals(new String[]{"sunny day", "sunny night", "rainy day", "rainy night"}, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatEmptyInputList() {
+        List<String> result = IDLabFunctions.crossConcat(List.of(), List.of("day", "night"), " ");
+        assertArrayEquals(new String[]{}, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatNoDelimiter() {
+        List<String> result = IDLabFunctions.crossConcat(List.of("sunny", "rainy"), List.of("day", "night"), null);
+        assertArrayEquals(new String[]{"sunnyday", "sunnynight", "rainyday", "rainynight"}, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatSequenceNormal() {
+        List<List<CharSequence>> input = List.of(
+                List.of("A", "The"),
+                List.of("good", "early"),
+                List.of("morning", "evening")
+        );
+        List<CharSequence> result = IDLabFunctions.crossConcatSequence(input, " - ");
+        List<CharSequence> expected = List.of(
+                "A - good - morning",
+                "A - good - evening",
+                "A - early - morning",
+                "A - early - evening",
+                "The - good - morning",
+                "The - good - evening",
+                "The - early - morning",
+                "The - early - evening"
+        );
+        assertArrayEquals(expected.toArray(), result.toArray());
+    }
 }

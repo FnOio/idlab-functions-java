@@ -239,6 +239,14 @@ idlab-fn:concat
     fno:expects         ( idlab-fn:_str idlab-fn:_otherStr idlab-fn:_delimiter ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:crossConcat
+    a                   fno:Function ;
+    fno:name            "crossConcat" ;
+    rdfs:label          "crossConcat" ;
+    dcterms:description "Produces the Cartesian product of two lists of strings, with each result optionally concatenated with a separator" ;
+    fno:expects         ( idlab-fn:_list idlab-fn:_otherList idlab-fn:_delimiter ) ;
+    fno:returns         ( idlab-fn:_listOut ) .
+
 idlab-fn:concatSequence
     a                   fno:Function ;
     fno:name            "concatSequence" ;
@@ -246,6 +254,14 @@ idlab-fn:concatSequence
     dcterms:description "Concatenates an rdf:seq of strings, optionally with a separator" ;
     fno:expects         ( idlab-fn:_seq idlab-fn:_delimiter ) ;
     fno:returns         ( idlab-fn:_stringOut ) .
+
+idlab-fn:crossConcatSequence
+    a                   fno:Function ;
+    fno:name            "crossConcatSequence" ;
+    rdfs:label          "crossConcatSequence" ;
+    dcterms:description "Produces the Cartesian product of an rdf:seq of lists of strings, optionally with a separator" ;
+    fno:expects         ( idlab-fn:_seq idlab-fn:_delimiter ) ;
+    fno:returns         ( idlab-fn:_listOut ) .
 
 idlab-fn:lookup
     a                   fno:Function ;
@@ -343,6 +359,13 @@ idlab-fn:_list
     rdfs:label    "list" ;
     fno:type      rdf:List ;
     fno:predicate idlab-fn:list .
+
+idlab-fn:_otherList
+    a             fno:Parameter ;
+    fno:name      "other list" ;
+    rdfs:label    "other list" ;
+    fno:type      rdf:List ;
+    fno:predicate idlab-fn:otherList .
 
 idlab-fn:_listOut
     a             fno:Parameter ;
@@ -643,11 +666,23 @@ idlab-fn-m:concatMapping
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "concat" ] .
 
+ idlab-fn-m:crossConcatMapping
+     a                  fno:Mapping ;
+     fno:function       idlab-fn:crossConcat;
+     fno:implementation	idlab-fn-m:idLabFunctions;
+     fno:methodMapping  [ a fnom:StringMethodMapping ; fnom:method-name "crossConcat" ] .
+
 idlab-fn-m:concatSequenceMapping
     a                   fno:Mapping ;
     fno:function		idlab-fn:concatSequence;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "concatSequence" ] .
+
+idlab-fn-m:crossConcatSequenceMapping
+    a                   fno:Mapping ;
+    fno:function		idlab-fn:crossConcatSequence;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "crossConcatSequence" ] .
 
 idlab-fn-m:lookupMapping
     a                   fno:Mapping ;

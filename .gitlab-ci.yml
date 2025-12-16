@@ -58,7 +58,7 @@ default:
   except:
     - main
 
-# Test merge requests using JDK8
-test:jdk17:
+# Test merge requests using JDK21
+test:jdk21:
   <<: *test
-  image: maven:3-eclipse-temurin-17-alpine # Java 17 is the latest LTS at the moment
+  image: maven:3-eclipse-temurin-21-alpine # Java 21 is the minimum required language level
