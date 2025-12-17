@@ -879,57 +879,57 @@ public class IDLabFunctions {
     }
 
     /**
-     * Produces the Cartesian product of two lists of strings, with each result optionally concatenated with a separator.
-     * <p>
-     * E.g.: {@code crossConcat(List.of("a", "the"), List.of("book", "table"), " - ")} returns
-     * {@code ["a - book", "a - table", "the - book", "the - table"] }
+     * Produces the Cartesian product of a List of Objects where each Object can be another List of Objects, optionally with a separator.
+     * <p/>
+     * E.g. {@code crossConcat(List.of(List.of("a", "the"), List.of("book", "table")), " - ")} returns
+     *      {@code ["a - book", "a - table", "the - book", "the - table"] }
+     * <p/>
+     * E.g. {@code crossConcat(List.of(List.of("book", "table"), 5))} returns
+     *      {@code ["book5", "table5"] }
      *
-     * @param seq1      The first list of character sequences (strings)
-     * @param seq2      The second list of character sequences (strings)
-     * @param delimiter The delimiter to put between the sequences. A value of {@code null} gets converted to an empty string.
-     * @return          A list with concatenated sequences.
-     */
-    public static List<String> crossConcat(final List<CharSequence> seq1, final List<CharSequence> seq2, final String delimiter) {
-        final String sep = delimiter == null? "" : delimiter;
-        List<String> results = new ArrayList<>();
-        for (CharSequence prefix : seq1) {
-            for (CharSequence suffix : seq2) {
-                results.add(prefix + sep + suffix);
-            }
-        }
-        return results;
-    }
-
-    /**
-     * Produces the Cartesian product of a List of lists of strings, optionally with a separator. It's like
-     * {@link IDLabFunctions#crossConcat(List, List, String)} )} with more than two lists.
-     * @param sequenceOfLists 2-dimensional list of strings
+     * @param sequenceOfLists List of Objects where each Object can be a List of Objects, which are toString()-ed.
      * @param delimiter       The delimiter to put between the sequences. A value of {@code null} gets converted to an empty string.
      * @return                A list with concatenated sequences.
      */
     public static List<CharSequence> crossConcatSequence(final List<?> sequenceOfLists, final String delimiter) {
+        if (sequenceOfLists == null) {
+            return List.of();
+        }
         final String sep = delimiter == null? "" : delimiter;
-        return crossConcatSequenceRecursive(null, sequenceOfLists, sep);
+        // remove empty lists from list
+        List<List<?>> filteredList = sequenceOfLists.stream()
+                .map(element -> {
+                    if (element ==null) {
+                        return List.of();
+                    } else if (element instanceof List) {
+                        return (List<?>)element;
+                    } else {
+                        return List.of(element);
+                    }
+                })
+                .filter(list -> !list.isEmpty())
+                .toList();
+        return crossConcatSequenceRecursive(null, filteredList, sep);
     }
 
-    private static List<CharSequence> crossConcatSequenceRecursive(final CharSequence prefix, final List<?> sequenceOfLists, final String delimiter) {
+    private static List<CharSequence> crossConcatSequenceRecursive(final CharSequence prefix, final List<List<?>> sequenceOfLists, final String delimiter) {
         if (sequenceOfLists.isEmpty()) {
-            return List.of(prefix);
+            if (prefix == null) {
+                return List.of();
+            } else {
+                return List.of(prefix);
+            }
         } else {
             List<CharSequence> results = new ArrayList<>();
-            Object currentList = sequenceOfLists.getFirst();
-            if (!(currentList instanceof Iterable)) {  // If the object is a sequence of a single value, wrap it into a list
-                currentList = List.of(currentList);
-            }
-            List<?> remainingLists = sequenceOfLists.subList(1, sequenceOfLists.size());
-            for (CharSequence element : (List<CharSequence>)currentList) {
-                CharSequence newPrefix = prefix == null ? element : prefix + delimiter + element;
+            List<?> currentList = sequenceOfLists.getFirst();
+            List<List<?>> remainingLists = sequenceOfLists.subList(1, sequenceOfLists.size());
+            for (Object element : currentList) {
+                CharSequence newPrefix = prefix == null ? element.toString() : prefix + delimiter + element;
                 results.addAll(crossConcatSequenceRecursive(newPrefix, remainingLists, delimiter));
             }
             return results;
         }
     }
-
 
     // TODO check whether this is the right place for this
     public static String jsonize(Object s) throws JsonProcessingException {

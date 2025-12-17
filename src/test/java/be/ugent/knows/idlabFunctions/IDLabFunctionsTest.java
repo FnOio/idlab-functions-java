@@ -1,11 +1,9 @@
 package be.ugent.knows.idlabFunctions;
 
 import com.opencsv.exceptions.CsvValidationException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -402,24 +400,13 @@ public class IDLabFunctionsTest {
     }
 
     @Test
-    public void testCrossConcatNormal() {
-        List<String> result = IDLabFunctions.crossConcat(List.of("sunny", "rainy"), List.of("day", "night"), " ");
-        assertArrayEquals(new String[]{"sunny day", "sunny night", "rainy day", "rainy night"}, result.toArray());
-    }
-
-    @Test
-    public void testCrossConcatEmptyInputList() {
-        List<String> result = IDLabFunctions.crossConcat(List.of(), List.of("day", "night"), " ");
-        assertArrayEquals(new String[]{}, result.toArray());
-    }
-
-    @Test
-    public void testCrossConcatNoDelimiter() {
-        List<String> result = IDLabFunctions.crossConcat(List.of("sunny", "rainy"), List.of("day", "night"), null);
+    public void testCrossConcatSequenceNoDelimiter() {
+        List<CharSequence> result = IDLabFunctions.crossConcatSequence(List.of(List.of("sunny", "rainy"), List.of("day", "night")), null);
         assertArrayEquals(new String[]{"sunnyday", "sunnynight", "rainyday", "rainynight"}, result.toArray());
     }
 
     @Test
+
     public void testCrossConcatSequenceNormal() {
         List<List<CharSequence>> input = List.of(
                 List.of("A", "The"),
@@ -427,16 +414,64 @@ public class IDLabFunctionsTest {
                 List.of("morning", "evening")
         );
         List<CharSequence> result = IDLabFunctions.crossConcatSequence(input, " - ");
-        List<CharSequence> expected = List.of(
-                "A - good - morning",
-                "A - good - evening",
-                "A - early - morning",
-                "A - early - evening",
-                "The - good - morning",
-                "The - good - evening",
-                "The - early - morning",
-                "The - early - evening"
+        String[] expected = new String[] {
+            "A - good - morning",
+                    "A - good - evening",
+                    "A - early - morning",
+                    "A - early - evening",
+                    "The - good - morning",
+                    "The - good - evening",
+                    "The - early - morning",
+                    "The - early - evening"
+        };
+        assertArrayEquals(expected, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatSequenceOneEmpty() {
+        List<List<?>> input = List.of(
+                List.of(),
+                List.of("good", "early"),
+                List.of("morning", "evening")
         );
-        assertArrayEquals(expected.toArray(), result.toArray());
+        List<CharSequence> result = IDLabFunctions.crossConcatSequence(input, " - ");
+        String[] expected = new String[]{
+                "good - morning",
+                "good - evening",
+                "early - morning",
+                "early - evening"
+        };
+        assertArrayEquals(expected, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatSequenceMixedTypes() {
+        List<Object> input = List.of(
+                2,
+                List.of("more", "many"),
+                "DJs"
+        );
+        List<CharSequence> result = IDLabFunctions.crossConcatSequence(input, " ");
+        String[] expected = new String[]{
+                "2 more DJs",
+                "2 many DJs"
+        };
+        assertArrayEquals(expected, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatSequenceWithNullList() {
+        List<CharSequence> result = IDLabFunctions.crossConcatSequence(null, " ");
+        String[] expected = new String[0];
+        assertArrayEquals(expected, result.toArray());
+    }
+
+    @Test
+    public void testCrossConcatSequenceWithNullElementInList() {
+        List<String> input = new ArrayList<>();
+        input.add(null);
+        List<CharSequence> result = IDLabFunctions.crossConcatSequence(input, " ");
+        String[] expected = new String[0];
+        assertArrayEquals(expected, result.toArray());
     }
 }
