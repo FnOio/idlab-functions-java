@@ -649,12 +649,6 @@ idlab-fn-m:concatMapping
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "concat" ] .
 
- idlab-fn-m:crossConcatMapping
-     a                  fno:Mapping ;
-     fno:function       idlab-fn:crossConcat;
-     fno:implementation	idlab-fn-m:idLabFunctions;
-     fno:methodMapping  [ a fnom:StringMethodMapping ; fnom:method-name "crossConcat" ] .
-
 idlab-fn-m:concatSequenceMapping
     a                   fno:Mapping ;
     fno:function		idlab-fn:concatSequence;
