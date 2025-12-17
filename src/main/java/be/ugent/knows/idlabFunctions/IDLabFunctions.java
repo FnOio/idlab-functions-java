@@ -880,10 +880,10 @@ public class IDLabFunctions {
 
     /**
      * Produces the Cartesian product of a List of Objects where each Object can be another List of Objects, optionally with a separator.
-     * <p/>
+     * <br>
      * E.g. {@code crossConcat(List.of(List.of("a", "the"), List.of("book", "table")), " - ")} returns
      *      {@code ["a - book", "a - table", "the - book", "the - table"] }
-     * <p/>
+     * <br>
      * E.g. {@code crossConcat(List.of(List.of("book", "table"), 5))} returns
      *      {@code ["book5", "table5"] }
      *
