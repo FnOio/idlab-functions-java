@@ -209,12 +209,7 @@ public class IDLabFunctions {
             HashMap<String, String> map = new HashMap<>();
 
             // Put elements in the hashMap
-            map.put("csv", "text/csv");
-            map.put("json", "application/json");
-            map.put("xml", "application/xml");
-            map.put("nt", "application/n-triples");
             map.put("ttl", "text/turtle");
-            map.put("nq", "application/n-quads");
             map.put("sql", "application/sql");
             
             // The rest of this list of mappings derived from CPython
