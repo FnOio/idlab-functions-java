@@ -269,6 +269,14 @@ idlab-fn:lookupWithDelimiter
      fno:expects         ( idlab-fn:_str idlab-fn:_inputFile idlab-fn:_fromColumn idlab-fn:_toColumn idlab-fn:_delimiter) ;
      fno:returns         ( idlab-fn:_stringOut ) .
 
+idlab-fn:alwaysReturnsABC
+    a                   fno:Function ;
+    fno:name            "alwaysReturnsABC" ;
+    rdfs:label          "alwaysReturnsABC" ;
+    dcterms:description "Just always and every time returns 'ABC'. Reason for existence: https://kg-construct.github.io/rml-fnml/test-cases/docs/#RMLFNMLTC0001-CSV'>RMLFNMLTC0001-CSV" ;
+    fno:expects         ( ) ;
+    fno:returns         ( idlab-fn:_stringOut ) .
+
 ##############
 # PARAMETERS #
 ##############
@@ -672,3 +680,9 @@ idlab-fn-m:lookupWithDelimiterMapping
     fno:function		idlab-fn:lookupWithDelimiter;
     fno:implementation	idlab-fn-m:idLabFunctions;
     fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "lookupWithDelimiter" ] .
+
+idlab-fn-m:idlab-fn:alwaysReturnsABCMapping
+    a                   fno:Mapping ;
+    fno:function		idlab-fn:alwaysReturnsABC;
+    fno:implementation	idlab-fn-m:idLabFunctions;
+    fno:methodMapping   [ a fnom:StringMethodMapping ; fnom:method-name "alwaysReturnsABC" ] .

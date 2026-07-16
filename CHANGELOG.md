@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Extended the number of MIME types (see https://github.com/FnOio/idlab-functions-java/pull/2)
+- Function `alwaysReturnsABC`, used in [RML-FNML test cases](https://kg-construct.github.io/rml-fnml/test-cases/docs/).
 
 ## [1.4.0] - 2025-12-17
 

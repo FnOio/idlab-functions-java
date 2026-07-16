@@ -474,4 +474,10 @@ public class IDLabFunctionsTest {
         String[] expected = new String[0];
         assertArrayEquals(expected, result.toArray());
     }
+
+    @Test
+    public void testAlwaysReturnsABC () {
+        String result = IDLabFunctions.alwaysReturnsABC();
+        assertEquals("ABC", result);
+    }
 }

@@ -1031,4 +1031,13 @@ public class IDLabFunctions {
         return null;
     }
 
+    /**
+     * Just always and every time returns "ABC".
+     * Reason for existence: <a href="https://kg-construct.github.io/rml-fnml/test-cases/docs/#RMLFNMLTC0001-CSV">RMLFNMLTC0001-CSV</a>
+     * @return "ABC"
+     */
+    public static String alwaysReturnsABC() {
+        return "ABC";
+    }
+
 }
