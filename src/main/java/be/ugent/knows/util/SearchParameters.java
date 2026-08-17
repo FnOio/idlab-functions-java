@@ -1,6 +1,7 @@
 package be.ugent.knows.util;
 
 import java.util.List;
+import java.util.Objects;
 
 public class SearchParameters {
 
@@ -9,10 +10,16 @@ public class SearchParameters {
     private final List<String> filters;
     private final List<Integer> columns;
     private final String fileName;
+    private final Integer toColumn;
+    private final String delimiter;
     private List<String> rowMatch = null;
 
     private String result = null;
     public SearchParameters(List<String> filters, List<Integer> columns, String name){
+        this(filters, columns, name, null, null);
+    }
+
+    public SearchParameters(List<String> filters, List<Integer> columns, String name, Integer toColumn, String delimiter){
 
         if(name == null || filters == null || columns == null){
             throw new IllegalArgumentException(
@@ -23,19 +30,25 @@ public class SearchParameters {
         this.fileName= name;
         this.filters = filters;
         this.columns = columns;
+        this.toColumn = toColumn;
+        this.delimiter = delimiter;
     }
 
     @Override
     public int hashCode() {
-        return this.filters.hashCode() * this.fileName.hashCode() * this.columns.hashCode();
+        return Objects.hash(this.filters, this.fileName, this.columns, this.toColumn, this.delimiter);
     }
 
     @Override
     public boolean equals(Object o){
-        SearchParameters pair = (SearchParameters) o;
+        if (!(o instanceof SearchParameters pair)) {
+            return false;
+        }
         return this.filters.equals(pair.filters)
                 && this.fileName.equals(pair.fileName)
-                && this.columns.equals(pair.columns);
+            && this.columns.equals(pair.columns)
+            && Objects.equals(this.toColumn, pair.toColumn)
+            && Objects.equals(this.delimiter, pair.delimiter);
     }
 
     @Override

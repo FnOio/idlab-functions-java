@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- Prevented `lookup` results from leaking between different input files.
+- Resolved relative lookup file paths through the library's standard file resolution.
+- Shared a full-file row cache between `lookup` and `multipleLookup`.
+
 ## [1.5.0] - 2026-07-16
 
 ### Added

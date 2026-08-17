@@ -1,13 +1,26 @@
 package be.ugent.knows.idlabFunctions;
 
-import com.opencsv.exceptions.CsvValidationException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.opencsv.exceptions.CsvValidationException;
 
 public class IDLabFunctionsTest {
 
@@ -249,6 +262,24 @@ public class IDLabFunctionsTest {
         assertEquals("Class B", IDLabFunctions.lookupWithDelimiter(searchString, inputFile, fromColumn, toColumn, delimiter));
     }
 
+    @Test
+    public void lookupDoesNotReuseResultsFromAnotherFile() throws CsvValidationException, IOException {
+        Path firstFile = Files.createTempFile("lookup-first", ".csv");
+        Path secondFile = Files.createTempFile("lookup-second", ".csv");
+        try {
+            Files.writeString(firstFile, "key;value\nmale;first\n");
+            Files.writeString(secondFile, "key;value\nmale;second\n");
+
+            assertEquals("first", IDLabFunctions.lookupWithDelimiter("male", firstFile.toString(), 0, 1, ";"));
+            assertEquals("second", IDLabFunctions.lookupWithDelimiter("male", secondFile.toString(), 0, 1, ";"));
+            assertEquals("first", IDLabFunctions.multipleLookup(List.of("male"), List.of(0), firstFile.toString(), 1, ";"));
+            assertEquals("second", IDLabFunctions.multipleLookup(List.of("male"), List.of(0), secondFile.toString(), 1, ";"));
+        } finally {
+            Files.deleteIfExists(firstFile);
+            Files.deleteIfExists(secondFile);
+        }
+    }
+
     private String name = "Alexander";
     private final String comment = "A&B";
     private String classType = "B";
@@ -283,31 +314,9 @@ public class IDLabFunctionsTest {
 
         anotherFileToHashmap();
 
-        assertEquals(71,IDLabFunctions.getMultipleLookupStateSet().size());
 
     }
 
-    @Test
-    public void simpleMultipleLookupSizeOfMapCheck() throws CsvValidationException, IOException {
-
-        assertEquals("2",
-                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
-                        new ArrayList<>(Arrays.asList(1, 2)),
-                        inputFile, 0, ","));
-        assertEquals(23,IDLabFunctions.getMultipleLookupStateSet().size());
-
-    }
-
-    @Test
-    public void simpleMultipleLookupSizeOfCacheCheck() throws CsvValidationException, IOException {
-
-        assertEquals("2",
-                IDLabFunctions.multipleLookup(new ArrayList<>(Arrays.asList(name, comment)),
-                        new ArrayList<>(Arrays.asList(1, 2)),
-                        inputFile, 0, ","));
-        assertEquals(IDLabFunctions.getCache().size(),IDLabFunctions.getMultipleLookupStateSet().size());
-
-    }
         @Test
     public void twoFilesWithSameSearchParameters() throws CsvValidationException, IOException {
         name = "Alexander";
@@ -396,7 +405,7 @@ public class IDLabFunctionsTest {
         System.clearProperty("ifState");
 
         // Check!
-        assertEquals("/tmp/custom_state_path/implicit_create_state", statePath);
+        assertEquals("/tmp/custom_state_path/implicit_create_state", statePath.replace("\\", "/"));
     }
 
     @Test
