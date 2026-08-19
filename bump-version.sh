@@ -40,6 +40,7 @@ if [ ! "$(yes_or_no 'Do you also want to commit the changes, create a git tag $t
 then
 	git add CHANGELOG.md README.md pom.xml
 	git commit -m "Update version to $VERSION"
+	git push
 	git tag $tagname
 	git push origin $tagname
 fi
