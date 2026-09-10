@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Fixed
-- Don't build fat jar anymore, as it is not needed for Maven Central publishing.
+- Don't build fat jar anymore.
 
 ## [1.5.1] - 2026-08-19
 
