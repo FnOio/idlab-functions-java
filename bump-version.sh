@@ -22,10 +22,17 @@ function yes_or_no {
 
 
 VERSION=$1
+
+# A release version is X.Y.Z; the next development version is derived from it.
+if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $VERSION != testrelease-* ]]; then
+	echo "Version must be X.Y.Z or testrelease-*, got: $VERSION"
+	exit 1
+fi
+
 echo "Changing version to $VERSION"
 
 echo 'Updating pom.xml...'
-mvn versions:set -DnewVersion=$VERSION
+mvn versions:set -DnewVersion=$VERSION -DgenerateBackupPoms=false
 
 echo 'Updating README.md...'
 sed -i -e "s|<version>.*<\/version>|<version>$VERSION</version>|" README.md
@@ -36,7 +43,7 @@ then
 fi
 
 tagname="v$VERSION"
-if [ ! "$(yes_or_no 'Do you also want to commit the changes, create a git tag $tagname and push it?')" ]
+if [ ! "$(yes_or_no "Do you also want to commit the changes, create a git tag $tagname and push it?")" ]
 then
 	git add CHANGELOG.md README.md pom.xml
 	git commit -m "Update version to $VERSION"

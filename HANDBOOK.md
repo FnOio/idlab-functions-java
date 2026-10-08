@@ -51,6 +51,7 @@ Every implementation request handled by an AI agent/LLM follows these constraint
 - Do not stop at making tests green; align the implementation with the specification or intended design, and document the semantic reason in this handbook.
 - Never remove or change existing tests (code or fixtures) without explicit permission. A change to an existing fixture (expected output, input, or data) is validated by the maintainer before it is kept, also when a tool writes it: propose the change with its reason, and keep it only after approval.
 - Update `CHANGELOG.md` for implementation changes: keep `## Unreleased` a short summary of what changed since the last release. A feature that is new since the last release is one Added line, which later fixes update instead of getting lines of their own; lines are for what a user of the last release notices.
+- Before a release, propose a review of everything changed since the previous release: the code for correctness, and the documentation and changelog for accuracy and brevity.
 - Check whether `README.md` needs updates for user-visible behavior or workflow changes, and update it when needed.
 - Write documentation (this handbook, READMEs, `TODO.md`, `CHANGELOG.md`, code comments) as plain positive statements: say what is true and leave out the contrast ("X, not Y"). Keep a negative only when it is the point itself, such as a prohibition, a warning, or a known limitation.
 - If there are difficulties during fulfillment, document them in the most appropriate existing handbook location (create a new chapter only when truly necessary) so future requests start with better context.
@@ -74,7 +75,7 @@ Package `be.ugent.knows.util` holds `Utils` (file resolution, file reading, dire
 
 `src/main/resources/fno/functions_idlab.ttl` describes each function (`fno:Function`, parameters, outputs) and maps it to a Java method name through `fno:methodMapping` / `fnom:StringMethodMapping`. `functions_idlab_classes_java_mapping.ttl` maps the implementation IRIs to the classes `IDLabFunctions` and `UtilFunctions`; `functions_idlab_test_classes_java_mapping.ttl` additionally maps `IDLabTestFunctions`. The `fno_idlab_old/` directory keeps the same structure under the earlier namespace for engines that still use it.
 
-A function becomes usable from an FnO-aware engine only once it is described in these Turtle files; a Java method alone is invisible to such engines. `multipleLookup` currently exists in Java only and has no FnO description.
+A function becomes usable from an FnO-aware engine only once it is described in these Turtle files; a Java method alone is invisible to such engines. `multipleLookup` exists in Java only and has no FnO description.
 
 ## State
 
@@ -97,10 +98,10 @@ Resolved paths are cached per directory/state-file pair. The README documents th
 
 ## Build and test
 
-- Build the JAR (plus a `jar-with-dependencies` from the assembly plugin): `mvn package`.
+- Build the jar: `mvn package`.
 - Install locally: `mvn install`.
 - Run tests: `mvn test`. CI runs `mvn $MAVEN_CLI_OPTS test` on JDK 21 (`maven:3-eclipse-temurin-21-alpine`) for every branch except `main`.
-- Lint with SpotBugs: `mvn -B compile spotbugs:check`. The plugin (`spotbugs-maven-plugin` 4.10.3.0 with SpotBugs 4.10.3, the setup MappingWeaver-java uses) is version-locked in `pluginManagement` and bound to no lifecycle phase, so `mvn package` and CI never fail on findings; the check runs on demand. The known state is 9 findings (all medium): a possible null dereference on an exception path in `IDLabFunctions.create`, `IDLabTestFunctions.random()` hiding the static `IDLabFunctions.random()`, and constructor-throw and exposed-internal-list findings in `SearchParameters`. They are recorded here and not yet fixed.
+- Lint with SpotBugs on demand: `mvn -B compile spotbugs:check`. The plugin is version-locked in `pluginManagement` and bound to no lifecycle phase, so `mvn package` and CI never fail on findings. TODO.md tracks the open findings.
 - CI also includes shared templates from `rml/util/ci-templates`: a check that `CHANGELOG.md` is updated, and the Maven Central deploy job.
 
 Tests:
@@ -112,6 +113,6 @@ Tests:
 
 ## Release process
 
-Step-by-step instructions are in [RELEASE.md](RELEASE.md); this section explains the tooling.
+Step-by-step instructions are in [RELEASE.md](RELEASE.md).
 
-Releases are scripted by `bump-version.sh <version>`: it sets the version in `pom.xml` (`mvn versions:set`), updates the dependency snippet version in `README.md`, optionally adds the version section to `CHANGELOG.md` with `changefrog`, and optionally commits, tags `v<version>` and pushes the tag. The `release` Maven profile builds source and Javadoc JARs, signs with GPG and publishes to Maven Central through `central-publishing-maven-plugin`; `.m2/settings.xml` reads the Central credentials from `MAVEN_REPO_USER` / `MAVEN_REPO_PASS`. Finally, after a pushed release other than a `testrelease-*`, it moves the version to the next patch `-SNAPSHOT` (e.g. `1.5.2-SNAPSHOT` after `1.5.1`) and commits and pushes that as "Prepare for next development cycle".
+Release tags are named `v<version>`. The tag pipeline builds with the `release` Maven profile, which adds source and Javadoc jars, signs with GPG and publishes to Maven Central through `central-publishing-maven-plugin`; `.m2/settings.xml` reads the Central credentials from `MAVEN_REPO_USER` / `MAVEN_REPO_PASS`.

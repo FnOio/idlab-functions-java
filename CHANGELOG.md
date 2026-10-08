@@ -7,14 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-### Added
-- `RELEASE.md`: step-by-step instructions for publishing a release.
-
 ### Changed
-- `bump-version.sh` moves the version to the next patch `-SNAPSHOT` after a pushed release, replacing the manual "Prepare for next development cycle" commit.
+- Release tooling: `RELEASE.md` documents the steps; `bump-version.sh` checks the version format and moves to the next patch `-SNAPSHOT` after a release.
 
-### Fixed
-- Don't build fat jar anymore.
+### Removed
+- The `jar-with-dependencies` jar; dependencies resolve transitively from the POM.
 
 ## [1.5.1] - 2026-08-19
 
