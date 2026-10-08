@@ -43,4 +43,14 @@ then
 	git push
 	git tag $tagname
 	git push origin $tagname
+
+	# Prepare for the next development cycle, so a local build is
+	# distinguishable from the release.
+	if [[ $VERSION != testrelease-* ]] ; then
+		NEXT="${VERSION%.*}.$((${VERSION##*.} + 1))-SNAPSHOT"
+		mvn versions:set -DnewVersion=$NEXT -DgenerateBackupPoms=false
+		git add pom.xml
+		git commit -m "Prepare for next development cycle"
+		git push
+	fi
 fi

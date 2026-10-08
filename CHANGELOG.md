@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+- `bump-version.sh` moves the version to the next patch `-SNAPSHOT` after a pushed release, replacing the manual "Prepare for next development cycle" commit.
+
 ### Fixed
 - Don't build fat jar anymore.
 
