@@ -112,4 +112,6 @@ Tests:
 
 ## Release process
 
+Step-by-step instructions are in [RELEASE.md](RELEASE.md); this section explains the tooling.
+
 Releases are scripted by `bump-version.sh <version>`: it sets the version in `pom.xml` (`mvn versions:set`), updates the dependency snippet version in `README.md`, optionally adds the version section to `CHANGELOG.md` with `changefrog`, and optionally commits, tags `v<version>` and pushes the tag. The `release` Maven profile builds source and Javadoc JARs, signs with GPG and publishes to Maven Central through `central-publishing-maven-plugin`; `.m2/settings.xml` reads the Central credentials from `MAVEN_REPO_USER` / `MAVEN_REPO_PASS`. Finally, after a pushed release other than a `testrelease-*`, it moves the version to the next patch `-SNAPSHOT` (e.g. `1.5.2-SNAPSHOT` after `1.5.1`) and commits and pushes that as "Prepare for next development cycle".
